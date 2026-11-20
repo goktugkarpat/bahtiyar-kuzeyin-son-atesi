@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bahtiyar: Kuzeyin Son Ateşi</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="sahne"></div>
+<div id="arayuz"></div>
+<script src="vendor/pixi.min.js"></script>
+<script src="src/cekirdek.js"></script>
+<!-- sprite paketleri (her biri VARLIK.ekle çağırır; dosya yoksa yer tutucu çizilir) -->
+<script src="varlik/barbar.js" onerror="void 0"></script>
+<script src="varlik/goblin.js" onerror="void 0"></script>
+<script src="varlik/okcu.js" onerror="void 0"></script>
+<script src="varlik/kalkanli.js" onerror="void 0"></script>
+<script src="varlik/saman.js" onerror="void 0"></script>
+<script src="varlik/yakici.js" onerror="void 0"></script>
+<script src="varlik/dev.js" onerror="void 0"></script>
+<script src="varlik/cevre.js" onerror="void 0"></script>
+<script src="varlik/efekt.js" onerror="void 0"></script>
+<!-- Kül Geçidi paketleri bölüm yükleme ekranında açılır. -->
+<!-- oyun -->
+<script src="src/ses.js"></script>
+<script src="src/efekt.js"></script>
+<script src="src/ayaz.js"></script>
+<script src="src/bolum.js"></script>
+<script src="src/oyuncu.js"></script>
+<script src="src/dusman.js"></script>
+<script src="src/ayaz-animasyon.js"></script>
+<script src="src/ayaz-kurt.js"></script>
+<script src="src/ayaz-dusman.js"></script>
+<script src="src/dev.js"></script>
+<script src="src/vargor.js"></script>
+<script src="src/skarn.js"></script>
+<script src="src/arayuz.js"></script>
+<script src="src/cila.js"></script>
+<script>OYUN.basla();</script>
+</body>
+</html>
