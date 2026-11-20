@@ -1767,6 +1767,7 @@
     var dk = d.ayazKafesTipi ? AYAZ.dekorDoku(d.ayazKafesTipi) : null;
     if (!dk) dk = dekorDoku(d.ad);
     var s = new PIXI.Sprite(dk.tex);
+    s.golgeTaban = d.tb;
     if (d._koz) {
       s.anchor.set(0.5, 0.5);
     } else {

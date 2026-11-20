@@ -1,4 +1,4 @@
-// Barbar – cila: net temas gölgeleri, zemin meşale sekme ışığı, dev arkası yumuşak saydamlık ve derinlik.
+// Zemin: yönlü siluet gölgeleri, yumuşak temas ve meşale sekme ışığı.
 // Gölgeler katman.golge'de (bütün karakterlerin ALTINDA): devin gölgesi barbarın üstüne binmez.
 // Meşale zemin sekmesi gölgelerin de ALTINDA çizilir: barbarı/düşmanı soldurmaz, hale oluşturmaz; gölgeler sıcak zemine oturur.
 // Barbarın temas gölgesi en son çizilir (devin geniş gölgesinin içinde bile ayağının altı net okunur).
@@ -6,10 +6,21 @@
   'use strict';
   var HAVUZ = 128, golgeler = [], doku = null, temasDoku = null, kap = null, temas = null;
   var DEKOR_HAVUZ = 48, dekorGolge = [], dekorKap = null;
+  var dekorIzleri = [], canliIzleri = [];
   var ISIK_HAVUZ = 24, bounceIsik = [], bounceKap = null, isikDoku = null;
   var devOrtamGolge = null, vargorOrtamGolge = null, devOrtamDoku = null;
   var zaman = 0, vargorAlfa = 1;
   var _ozelSpr = [];
+  // Üst soldaki gök ışığı (köy ve hisar) ve sağ alttaki kızıl ocak ışığı.
+  var GOLGE_YON = [
+    { x: 0.45, y: 0.24, renk: 0x222934, dekor: 0.36, canli: 0.37 },
+    { x: -0.36, y: -0.20, renk: 0x33201e, dekor: 0.40, canli: 0.38 },
+    { x: 0.35, y: 0.22, renk: 0x26394b, dekor: 0.30, canli: 0.32 }
+  ];
+  GOLGE_YON.forEach(function (yon) {
+    yon.egim = Math.atan2(-yon.x, -yon.y);
+    yon.uzunluk = Math.hypot(yon.x, yon.y);
+  });
   var GEN = {
     goblin: 34, okcu: 46, kalkanli: 58, saman: 44, yakici: 46,
     baskinci: 48, infazci: 68, dev: 190, vargor: 145,
@@ -19,15 +30,14 @@
     devSaydam: 0.85,     // dev barbarı örterken hafif ve temiz saydamlaşma (hayalet/çamur olmadan silueti destekler)
     vargorSaydam: 0.78,  // Vargor barbarı örterken temiz saydamlaşma
     devGecis: 8,         // saydamlaşma hızı (1/sn)
-    temasAlfa: 0.84,     // barbarın ayağının altındaki net temas gölgesi
-    dekorAlfa: 0.48,     // yapı/ağaç/kaya/arabaların zemine düşen net temas gölgesi (derinlik)
+    temasAlfa: 0.74,     // barbarın ağırlığını ayağın altında tutan temas gölgesi
+    dekorAlfa: 0.52,     // yapı/ağaç/kaya/arabaların taban izi
     mesaleSekme: 0.11    // meşale/ateşlerin zeminde bıraktığı sıcak sekme ışığı (barbarı soldurmaz)
   };
   function ekleAlt(ust, cocuk) {
     if (typeof ust.addChildAt === 'function') ust.addChildAt(cocuk, 0);
     else ust.addChild(cocuk);
   }
-  // varlik katmanındaki düz dekor resimleri (karakterler Container; dekorlar düz Sprite) için ayağa net temas gölgesi
   // YAKINLIK (19 Kasım): ekranda GÖRÜNEN DÜNYA dikdörtgeni (cekirdek.js OYUN.gorus + sarsıntı); yoksa eski tam ekran hesabı. Tek nesne.
   var _gd = { x: 0, y: 0, w: 1280, h: 720 };
   function gorD() {
@@ -68,37 +78,54 @@
     if (Math.abs(spr.alpha - hdf) > 0.01) spr.alpha += (hdf - spr.alpha) * Math.min(1, dt * 10);
     return ortulu;
   }
-  function dekorGolgeleri() {
-    var ch = OYUN.katman.varlik.children, V = gorD(), ky = V.y, Hh = V.h, x0 = V.x - 60, x1 = V.x + V.w + 60, n = 0;
+  // Sprite'ın mevcut atlas karesini zemine yatırır. Yeni doku, filtre ve yeniden çizim yok.
+  function izduser(hedef, resim, x, y, sx, sy, yon, alfa) {
+    if (hedef.texture !== resim.texture) hedef.texture = resim.texture;
+    hedef.anchor.copyFrom(resim.anchor);
+    hedef.position.set(x, y);
+    hedef.scale.set(sx, sy * yon.uzunluk);
+    hedef.skew.x = yon.egim;
+    hedef.tint = yon.renk;
+    hedef.alpha = alfa;
+    hedef.visible = true;
+  }
+  function kalanIzleriGizle(havuz, n) {
+    for (; n < havuz.length; n++) havuz[n].visible = false;
+  }
+  function dekorGolgeleri(V, yon) {
+    var ch = OYUN.katman.varlik.children, n = 0, x1 = V.x + V.w, y1 = V.y + V.h;
     ozelSprTopla();
     for (var i = 0; i < ch.length && n < DEKOR_HAVUZ; i++) {
       var c = ch[i];
-      if (c.constructor !== PIXI.Sprite || !c.visible || !c.texture || c.y < ky - 40 || c.y > ky + Hh + 300) continue;
-      if (_ozelSpr.indexOf(c) >= 0) continue;
+      if (!c.golgeTaban || !c.visible || c.alpha <= 0 || _ozelSpr.indexOf(c) >= 0) continue;
       var w = Math.abs(c.texture.width * c.scale.x), h = Math.abs(c.texture.height * c.scale.y);
-      if (c.x + w < x0 || c.x - w > x1) continue;   // görüş yana kaymışken dışarıda kalan dekor havuzu doldurmasın
-      if (h < 40 || w < 30 || c.anchor.y < 0.6) continue;
-      var ax = c.scale.x < 0 ? 1 - c.anchor.x : c.anchor.x, s = dekorGolge[n++];
-      s.visible = true; s.x = c.x + (0.5 - ax) * w; s.y = c.y - Math.min(10, h * 0.04);
-      s.width = w * 0.94; s.height = Math.max(12, Math.min(w * 0.28, 66)); s.alpha = AYAR.dekorAlfa * c.alpha;
+      var dx = h * yon.x, dy = h * yon.y;
+      if (c.x + w + Math.max(0, dx) < V.x || c.x - w + Math.min(0, dx) > x1 ||
+          c.y + 42 + Math.max(0, dy) < V.y || c.y - 52 + Math.min(0, dy) > y1) continue;
+      // Yıkıntı ve kaya kısa, kule ve ağaç uzun bir iz bırakır. Taban ise gerçek temas ölçülerini izler.
+      izduser(dekorIzleri[n], c, c.x, c.y, c.scale.x, c.scale.y, yon, yon.dekor * c.alpha);
+      var s = dekorGolge[n++], taban = c.golgeTaban;
+      s.position.set(c.x, c.y - Math.min(12, taban[1] * 0.23));
+      s.width = Math.max(14, Math.min(w * 1.16, taban[0] * 1.2));
+      s.height = Math.max(10, Math.min(108, taban[1] * 1.22));
+      s.tint = yon.renk; s.alpha = AYAR.dekorAlfa * c.alpha; s.visible = true;
     }
-    for (; n < DEKOR_HAVUZ; n++) dekorGolge[n].visible = false;
+    kalanIzleriGizle(dekorGolge, n);
+    kalanIzleriGizle(dekorIzleri, n);
   }
 
-  // 3. tur: gölgeler NET biçimli (sert kenarlı, yarı saydam oval) — yumuşak bulanık leke değil ("gıcır gıcır").
-  // 2× pikselle çizilir (retina); soğuk-koyu ton sıcak zemin ışığıyla kontrast kurar.
-  function dokuYap(sert) {
-    var K = 2, c = document.createElement('canvas'); c.width = 128 * K; c.height = 64 * K;
-    var g = c.getContext('2d'); g.scale(K, K);
-    g.fillStyle = sert ? 'rgba(8,6,12,0.62)' : 'rgba(8,6,12,0.48)';
-    g.beginPath(); g.ellipse(64, 32, 60, 28, 0, 0, Math.PI * 2); g.fill();
-    g.fillStyle = sert ? 'rgba(4,2,8,0.28)' : 'rgba(4,2,8,0.18)';   // ayağın hemen altı bir ton koyu (yine net kenarlı)
-    g.beginPath(); g.ellipse(64, 32, 40, 18, 0, 0, Math.PI * 2); g.fill();
-    if (sert) {
-      g.fillStyle = 'rgba(2,1,5,0.22)';
-      g.beginPath(); g.ellipse(64, 32, 24, 11, 0, 0, Math.PI * 2); g.fill();
-    }
-    return PIXI.Texture.from(c, { resolution: K });
+  // Altı yumuşakça zemine karışan tek temas dokusu. Bölüme göre gölge rengini sprite verir.
+  function dokuYap(yogun) {
+    var c = document.createElement('canvas'); c.width = 128; c.height = 64;
+    var g = c.getContext('2d');
+    g.translate(64, 32); g.scale(1, 0.5);
+    var gr = g.createRadialGradient(0, 0, 4, 0, 0, 62);
+    gr.addColorStop(0, yogun ? 'rgba(255,255,255,.95)' : 'rgba(255,255,255,.81)');
+    gr.addColorStop(0.46, yogun ? 'rgba(255,255,255,.78)' : 'rgba(255,255,255,.59)');
+    gr.addColorStop(0.75, 'rgba(255,255,255,.26)');
+    gr.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = gr; g.fillRect(-64, -64, 128, 128);
+    return PIXI.Texture.from(c);
   }
   // Dev için geniş atmosferik zemin gölgesi (temas gölgesinin altında, ağırlık ve derinlik verir)
   function ortamGolgeDokuYap() {
@@ -152,12 +179,20 @@
     kap = new PIXI.Container();
     OYUN.katman.golge.addChild(dekorKap);   // yapı/ağaç/kaya temas gölgeleri: karakter gölgelerinin ALTINDA
     ekleAlt(OYUN.katman.golge, bounceKap);  // meşale zemin sekme ışığı: tüm gölgelerin de ALTINDA (karakterleri soldurmaz)
+    for (var j = 0; j < DEKOR_HAVUZ; j++) {
+      var di = new PIXI.Sprite(); di.visible = false;
+      dekorKap.addChild(di); dekorIzleri.push(di);
+    }
     for (var j = 0; j < DEKOR_HAVUZ; j++) { var dg = new PIXI.Sprite(doku); dg.anchor.set(0.5); dg.visible = false; dekorKap.addChild(dg); dekorGolge.push(dg); }
     OYUN.katman.golge.addChild(kap);
     devOrtamGolge = new PIXI.Sprite(devOrtamDoku); devOrtamGolge.anchor.set(0.5); devOrtamGolge.visible = false;
     kap.addChild(devOrtamGolge);
     vargorOrtamGolge = new PIXI.Sprite(devOrtamDoku); vargorOrtamGolge.anchor.set(0.5); vargorOrtamGolge.visible = false;
     kap.addChild(vargorOrtamGolge);
+    for (var k = 0; k < HAVUZ; k++) {
+      var ci = new PIXI.Sprite(); ci.visible = false;
+      kap.addChild(ci); canliIzleri.push(ci);
+    }
     for (var i = 0; i < HAVUZ; i++) { var s = new PIXI.Sprite(doku); s.anchor.set(0.5); s.visible = false; kap.addChild(s); golgeler.push(s); }
     temas = new PIXI.Sprite(temasDoku); temas.anchor.set(0.5); temas.visible = false; kap.addChild(temas);   // en üstte
   }
@@ -185,9 +220,28 @@
     }
     for (; n < ISIK_HAVUZ; n++) bounceIsik[n].visible = false;
   }
-  function koy(n, x, y, gen, alfa) {
+  function koy(n, x, y, gen, alfa, yon) {
     var s = golgeler[n]; if (!s) return;
-    s.visible = true; s.x = x; s.y = y + 2; s.width = gen * 1.15; s.height = gen * 0.46; s.alpha = alfa;   // net oval: eski yumuşak lekenin görünen boyu
+    s.position.set(x, y + 2);
+    s.width = gen * 1.24; s.height = gen * 0.57;
+    s.tint = yon.renk; s.alpha = alfa; s.visible = true;
+  }
+  function canliIz(n, spr, x, y, V, yon, alfa) {
+    if (!spr || !spr.visible || n >= HAVUZ || alfa <= 0 ||
+        x < V.x - 180 || x > V.x + V.w + 180 ||
+        y < V.y - 130 || y > V.y + V.h + 130) return n;
+    var g = spr.g || spr;
+    // Yedek modeller ve çok parçalı kurt kuklası temas dokusu ile zemine oturur.
+    if (spr.yerTutucu || spr.kurtRig || !g.visible || !g.anchor || g.texture === PIXI.Texture.EMPTY) return n;
+    var sx = g.scale.x, sy = g.scale.y;
+    if (g !== spr) {
+      sx *= spr.scale.x; sy *= spr.scale.y;
+      var asagi = g.y * spr.scale.y;
+      x += g.x * spr.scale.x - asagi * yon.x;
+      y -= asagi * yon.y;
+    }
+    izduser(canliIzleri[n], g, x, y, sx, sy, yon, yon.canli * alfa);
+    return n + 1;
   }
   function bossOrtuOrtam(boss, spr, ortam, w, h, alfa, dxLim, dyLim, saydam, oy, saklananAlfa, dt) {
     var canli = !!(boss && boss.can > 0 && !boss.olu && (boss !== window.VARGOR || boss.aktif));
@@ -230,9 +284,10 @@
     if (!kap) return;
     var dt = Math.min(0.1, gd || 0.016);
     zaman += dt;
+    var V = gorD(), yon = GOLGE_YON[OYUN.bolum - 1] || GOLGE_YON[0];
     try { mesaleSekmeleri(); } catch (e) {}
-    try { dekorGolgeleri(); } catch (e) {}
-    var n = 0, i, d, L;
+    dekorGolgeleri(V, yon);
+    var n = 0, iz = 0, i, d, L;
     var oy = window.OYUNCU && OYUNCU.canli !== false && typeof OYUNCU.x === 'number';
     var vr = window.VARGOR;
     L = (window.DUSMAN && DUSMAN.liste) || [];
@@ -244,17 +299,20 @@
       if (vargorMu && vargorAlfa < sa) sa = vargorAlfa;
       var gen = vargorMu ? GEN.vargor : (GEN[d.tur] || (d.r ? d.r * 2.2 : 44));
       if (d.tur === 'kircil_kurt' && d.kurt) sa *= d.kurt.alfa;
+      iz = canliIz(iz, dGor, d.x, d.y, V, yon, sa);
       var ayak = dGor && dGor.temas;
       if (ayak) {
         var ax = dGor.x + ayak.x, ay = dGor.y + ayak.y;
-        koy(n++, d.x + ayak.x * .31, d.y + ayak.y * .31, gen * .92, .67 * sa);
-        if (n < HAVUZ - 1) koy(n++, ax, ay - 2, Math.min(d.tur === 'skarn' ? 30 : 23, gen * .33), (d.tur === 'skarn' ? .61 : .48) * sa);
-      } else koy(n++, d.x, d.y, gen, .85 * sa);
+        koy(n++, d.x + ayak.x * .31, d.y + ayak.y * .31, gen * .92, .67 * sa, yon);
+        if (n < HAVUZ - 1) koy(n++, ax, ay - 2, Math.min(d.tur === 'skarn' ? 30 : 23, gen * .33), (d.tur === 'skarn' ? .61 : .48) * sa, yon);
+      } else koy(n++, d.x, d.y, gen, .80 * sa, yon);
     }
     if (vr && vr.aktif && !vr.olu && isFinite(vr.x) && isFinite(vr.y) && L.indexOf(vr) < 0 && n < HAVUZ - 1) {
       var vg = goruntuAl(vr);
       var va = (vg && typeof vg.alpha === 'number') ? vg.alpha : 1;
-      koy(n++, vr.x, vr.y, GEN.vargor, 0.85 * Math.min(va, vargorAlfa));
+      var vaGolge = Math.min(va, vargorAlfa);
+      koy(n++, vr.x, vr.y, GEN.vargor, 0.8 * vaGolge, yon);
+      iz = canliIz(iz, vg, vr.x, vr.y, V, yon, vaGolge);
     }
     var tmL = vr && vr.aktif && !vr.olu && Array.isArray(vr.totemler) ? vr.totemler : null;
     if (tmL) {
@@ -265,7 +323,8 @@
         var tGor = tm.kap || goruntuAl(tm);
         if (tmCanli) {
           var ta = (tGor && typeof tGor.alpha === 'number') ? tGor.alpha : 1;
-          if (n < HAVUZ - 1) koy(n++, tm.x, tm.y, GEN.totem, 0.82 * ta);
+          if (n < HAVUZ - 1) koy(n++, tm.x, tm.y, GEN.totem, 0.77 * ta, yon);
+          iz = canliIz(iz, tm.sprite, tm.x, tm.y, V, yon, ta);
           ortuSaydamGuncelle(tGor, tm.x, tm.y, oy, 205, 48, 0.45, dt);
         } else if (tm.kap && tm.kap.alpha !== 1) {
           tm.kap.alpha = 1;
@@ -281,7 +340,8 @@
         var vCanli = !v.patladi && v.aktif !== false && !(typeof v.can === 'number' && v.can <= 0);
         if (vCanli) {
           var vaa = (vGor && typeof vGor.alpha === 'number') ? vGor.alpha : 1;
-          if (n < HAVUZ - 1) koy(n++, v.x, v.y, GEN.varil, 0.78 * vaa);
+          if (n < HAVUZ - 1) koy(n++, v.x, v.y, GEN.varil, 0.74 * vaa, yon);
+          iz = canliIz(iz, vGor, v.x, v.y, V, yon, vaa);
           if (ortuSaydamGuncelle(vGor, v.x, v.y, oy, 105, 44, 0.5, dt)) v._cilaSoldurdu = true;
           else if (v._cilaSoldurdu && vGor && vGor.alpha > 0.985) { vGor.alpha = 1; v._cilaSoldurdu = false; }
         } else if (v._cilaSoldurdu && vGor) {
@@ -289,8 +349,12 @@
         }
       }
     }
-    if (oy) koy(n++, OYUNCU.x, OYUNCU.y, GEN.oyuncu, 0.9);
-    for (; n < HAVUZ; n++) golgeler[n].visible = false;
+    if (oy) {
+      koy(n++, OYUNCU.x, OYUNCU.y, GEN.oyuncu, 0.65, yon);
+      iz = canliIz(iz, OYUNCU.sprite, OYUNCU.x, OYUNCU.y, V, yon, 1);
+    }
+    kalanIzleriGizle(golgeler, n);
+    kalanIzleriGizle(canliIzleri, iz);
     // iri düşman (kalkanlı, okçu, şaman, baskıncı, infazcı) barbarın ÖNÜNDE durup onu örtüyorsa hafif saydamlaşır: barbar kalabalıkta kaybolmasın
     if (oy) {
       var BOYU = { kalkanli: 150, okcu: 135, saman: 150, yakici: 135, baskinci: 128, infazci: 165 };
@@ -313,14 +377,17 @@
     temas.visible = !!oy;
     if (oy) {
       temas.x = OYUNCU.x; temas.y = OYUNCU.y + 1;
-      temas.width = 38 + ortu * 5; temas.height = 13 + ortu * 2;
+      temas.width = 39 + ortu * 5; temas.height = 19 + ortu * 2;
+      temas.tint = yon.renk;
       temas.alpha = Math.min(0.95, AYAR.temasAlfa + ortu * 0.14);
     }
   }
   OYUN.sistem('cila', { baslat: kur, herKare: herKare, sifirla: function () {
     zaman = 0; vargorAlfa = 1;
-    for (var i = 0; i < golgeler.length; i++) golgeler[i].visible = false;
-    for (var j = 0; j < dekorGolge.length; j++) dekorGolge[j].visible = false;
+    kalanIzleriGizle(golgeler, 0);
+    kalanIzleriGizle(canliIzleri, 0);
+    kalanIzleriGizle(dekorGolge, 0);
+    kalanIzleriGizle(dekorIzleri, 0);
     for (var b = 0; b < bounceIsik.length; b++) bounceIsik[b].visible = false;
     if (devOrtamGolge) devOrtamGolge.visible = false;
     if (vargorOrtamGolge) vargorOrtamGolge.visible = false;

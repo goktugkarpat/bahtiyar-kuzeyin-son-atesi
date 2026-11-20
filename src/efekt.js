@@ -19,19 +19,19 @@
     vurusYukseklik: 40,    // vuruş noktası yerden kaç px yukarıda sayılır
     vinyet: 0,             // ekran kenarı karartması (3. tur: kapalı; ışık haritasındaki çok hafif kenar yeterli)
     ton: 0xc9d2d4,         // (eski) tek renk ton; artık ışık haritası kullanılıyor
-    ortam: 0x828e98,      // Sağanakta ıslak taş ve sıcak meşale karşıtlığı.
-    ortamDev: 0x87949e,
-    ortamVolkan: 0x97857d, // Kül Geçidi: sıcak bazalt, kömür grisi gölge.
-    ortamVolkanDev: 0x998a83,
-    ortamAyaz: 0x8b959c,  // Ayaz Hisarı: kar yansıması, buz mavisi gölge.
-    ortamAyazDev: 0x919da6,
+    ortam: 0x828d96,      // Yanık Köy: sağanak altındaki ıslak taş.
+    ortamDev: 0x88949f,
+    ortamVolkan: 0x94837c, // Kül Geçidi: kuru sıcak bazalt ve kömür.
+    ortamVolkanDev: 0x998981,
+    ortamAyaz: 0x8b969f,  // Ayaz Hisarı: kardan seken mavi ışık.
+    ortamAyazDev: 0x919da7,
     isikIki: true,        // 2× çarpma (false: eski düz çarpma)
     atesGuc: 0.2,      // ateş havuzunun haritadaki gücü (2× çarpmada)
     flasGuc: 0.32,         // vuruş/şok ışıklarının haritadaki gücü çarpanı
     haritaVinyet: 0.055,
     haritaVinyetVolkan: 0.095,
-    volkanVinyet: 0.14,
-    volkanAltIsik: 0.115,
+    volkanVinyet: 0.105,
+    volkanAltIsik: 0.075,
     haritaOlcek: 2,        // ışık haritası çözünürlük bölücüsü (1280×720 → 640×360; 4'te küçük ışıklar kaba lekeydi)
     kahramanIsik: 0.12,    // barbarın çevresindeki çok hafif sıcak ışık havuzu (zemin; ışıl ışıl olmasın)
     kahramanYaricap: 120,  // px
@@ -1500,6 +1500,12 @@
   // Düşük çözünürlüklü tek RenderTexture: serin ortam tonu + kenar karartması + eklemeli ışık havuzları.
   // Dünyanın üstüne ÇARPMA ile serilir (ışık olmayan yer serin-karanlık, ışık olan yer kendi rengini korur).
   var IH = null;   // {rt, kok, dunya, ortam, vinyet, kahraman, ates:[], flas:[], anlik:[], anlikN}
+  // Her bölümün geniş çevre ışığı ve ateşe yakın yerel renkleri; aynı ışık haritasında çizilir.
+  var ISIK_PALET = [
+    { gok: 0xc2dff2, guc: .114, x: .15, y: .12, en: 1.62, boy: 1.88, mesale: 0xffa35e, enkaz: 0xff682b, ates: 0xff803e },
+    { gok: 0xeb894e, guc: .071, x: .73, y: .93, en: 1.72, boy: 1.52, mesale: 0xff8d47, enkaz: 0xff5721, ates: 0xff6c2d },
+    { gok: 0xcadfff, guc: .098, x: .19, y: .10, en: 2.08, boy: 2.34, mesale: 0xffb36b, enkaz: 0xff833d, ates: 0xff9950 }
+  ];
   // TAM EKRAN: görünen alanın tamamı (mantıksal ekran koordinatı; 1280×720 ortada, x0/y0 ≤ 0). cekirdek.js OYUN.gorunum.
   function gor() { return OYUN.gorunum || { x0: 0, y0: 0, w: OYUN.W || 1280, h: OYUN.H || 720 }; }
   // YAKINLIK (19 Kasım): o kare ekranda GÖRÜNEN DÜNYA dikdörtgeni {x,y,w,h} (cekirdek.js OYUN.gorus + sarsıntı).
@@ -1579,9 +1585,9 @@
       if (!gorunur) continue;
       s.x = i ? (lav.sag + OYUN.W) * .5 : lav.sol * .5;
       s.y = (lav.y1 + lav.y2) * .5;
-      s.scale.set(9.5, 6.5);
-      s.tint = 0xff6a31;
-      s.alpha = (iki ? .14 : .095) * (.89 + .075 * Math.sin(gT * 1.3 + i) + .035 * Math.sin(gT * 3.1));
+      s.scale.set(8.8, 5.1);
+      s.tint = 0xff793c;
+      s.alpha = (iki ? .156 : .105) * (.91 + .058 * Math.sin(gT * 1.3 + i) + .032 * Math.sin(gT * 3.1));
     }
   }
   function haritaGuncelle(gd) {
@@ -1602,11 +1608,11 @@
     var v2 = bolumNo === 2;
     IH.ortam.tint = haritaOrtam(iki, devVar);
     var soguk = bolumNo === 3;
-    var dolgu = IH.dolgu;
-    dolgu.tint = v2 ? 0xeb9257 : soguk ? 0xbcdfff : 0xb9d5e7;
-    dolgu.alpha = (v2 ? 0.049 : soguk ? 0.093 : 0.085) * (iki ? 1 : 0.6);
-    dolgu.position.set(kx + V.w * (v2 ? 0.58 : 0.31), ky + V.h * (v2 ? 0.84 : 0.24));
-    dolgu.scale.set(V.w / 69, V.h / 53);
+    var palet = ISIK_PALET[bolumNo - 1] || ISIK_PALET[0], dolgu = IH.dolgu;
+    dolgu.tint = palet.gok;
+    dolgu.alpha = palet.guc * (iki ? 1 : .60);
+    dolgu.position.set(kx + V.w * palet.x, ky + V.h * palet.y);
+    dolgu.scale.set(V.w * palet.en / 128, V.h * palet.boy / 128);
     // atmosfer: arena kilidinde koyu-kırmızı ince gerilim kenarı, dev/Vargor alanında uğursuz kenar, Bölüm II'de sıcak volkanik kenar (orta açık kalır)
     var kayG = Math.min(1, gd * 1.5);
     gerT += ((arenaKapali && !devVar ? 1 : 0) - gerT) * kayG; devT += ((devVar ? 1 : 0) - devT) * kayG;
@@ -1625,13 +1631,15 @@
       var f = at[j]; if (!f || f.y < ky - 350 || f.y > ky + Hh + 350 || f.x < kx - 450 || f.x > kx + Ww + 450) continue;
       var g = (f.guc || 1) * AYAR.atesIsik, s = IH.ates[n++], fh = f.h || 30;
       var tr = f.tur, tit = atesTitresim(j, tr);
-      var yr = tr === 'mesale' ? 150 + 150 * g : (tr === 'enkaz' ? 170 + 150 * g : 150 + 150 * g);
-      if (iki) yr *= 1.1;  // geniş ama merkezde ölçülü havuz (dekor ışıkta düz açık kahveye dönmesin)
-      s.visible = true; s.x = f.x; s.y = f.y - fh * 0.3;
-      s.tint = soguk ? 0xffa450 : iki ? (tr === 'mesale' ? 0xff8638 : (tr === 'enkaz' ? 0xff5214 : 0xff621c)) : (tr === 'mesale' ? 0xffb070 : (tr === 'enkaz' ? 0xff7a38 : 0xff9a50));
-      s.alpha = iki ? AYAR.atesGuc * (soguk ? 1.14 : tr === 'mesale' ? 1.1 : 1) * tit : Math.min(1, (tr === 'mesale' ? 0.85 : 0.75) * tit);
-      var boy = yr / 64 * (0.98 + 0.03 * tit);
-      s.scale.set(boy * (soguk ? .95 : 1.03), boy * (v2 ? .85 : soguk ? .66 : .79));
+      var mesale = tr === 'mesale', enkaz = tr === 'enkaz';
+      var yaricap = (mesale ? 138 : enkaz ? 166 : 148) + 136 * g;
+      var agizY = f.agizY ?? f.y - fh * .66;
+      s.visible = true;
+      s.position.set(f.agizX ?? f.x, f.y + (agizY - f.y) * .40);
+      s.tint = mesale ? palet.mesale : enkaz ? palet.enkaz : palet.ates;
+      s.alpha = iki ? AYAR.atesGuc * (mesale ? 1.12 : .95) * tit : Math.min(1, (mesale ? .85 : .75) * tit);
+      var boy = yaricap * (iki ? 1.1 : 1) / 64 * (.98 + .03 * tit);
+      s.scale.set(boy * (mesale ? .86 : 1.07), boy * (soguk ? .69 : .80));
     }
     for (; n < IH.ates.length; n++) IH.ates[n].visible = false;
     yagIsik(iki, yk);
@@ -1911,8 +1919,8 @@
       var s = yansimalar[n++], mesale = f.tur === 'mesale';
       s.visible = true;
       s.position.set(f.agizX ?? f.x, f.y + 6);
-      s.scale.set(mesale ? .83 : 1.15, mesale ? .70 : .95);
-      s.alpha = (mesale ? .28 : .20) * atesTitresim(i, f.tur) * (.9 + .1 * Math.sin(gT * 3 + i));
+      s.scale.set(mesale ? .69 : 1.15, mesale ? .88 : .76);
+      s.alpha = (mesale ? .33 : .21) * atesTitresim(i, f.tur) * (.92 + .08 * Math.sin(gT * 3 + i));
     }
     for (; n < yansimalar.length; n++) yansimalar[n].visible = false;
   }
@@ -2162,7 +2170,7 @@
       kok.vinyet.tint = 0x480e04; kok.vinyet.alpha = AYAR.volkanVinyet;
       kok.volkan.visible = AYAR.volkanAltIsik > 0;
       kok.volkan.tint = 0xe83c0c;
-      kok.volkan.alpha = AYAR.volkanAltIsik * (0.85 + 0.15 * Math.sin(gT * 1.4));
+      kok.volkan.alpha = AYAR.volkanAltIsik * (.94 + .06 * Math.sin(gT * 1.4));
     } else {
       kok.vinyet.tint = 0x000000; kok.vinyet.alpha = AYAR.vinyet;
       kok.volkan.visible = false; kok.volkan.alpha = 0;

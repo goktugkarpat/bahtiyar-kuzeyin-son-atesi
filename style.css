@@ -430,7 +430,7 @@ body.d-mola .ar-uyari, body.d-mola .ar-ipucu, body.d-mola .ar-hikaye, body.d-mol
 .ar-sol-alt .kanal, .ar-sol-alt .dolu, .ar-sol-alt .iz { position: absolute; display: block; }
 
 /* Can */
-/* 19 Kasım (ebeveyn): can şeridi öfkeden yalnız biraz büyük (285×18 / öfke 261×16); içinde solda CAN, sağ uçta sayı. Sol hiza öfkeyle aynı. */
+/* 19 Kasım (ebeveyn): can şeridi öfkeden yalnız biraz büyük (285×18 / öfke 285×16); içinde solda CAN, sağ uçta sayı. Sol hiza öfkeyle aynı. */
 .ar-can { position: absolute; left: var(--can-sol); top: 6px; width: var(--can-genislik); height: 30px; filter: drop-shadow(0 3px 2px rgba(0,0,0,.7)); }
 .ar-can .kanal {
   left: 12px; top: 6px; width: 285px; height: 18px; overflow: hidden;
@@ -460,7 +460,7 @@ body.d-mola .ar-uyari, body.d-mola .ar-ipucu, body.d-mola .ar-hikaye, body.d-mol
 .ar-can > .ad { left: 20px; top: 6px; height: 18px; line-height: 18px; font-size: 12px; letter-spacing: .3em; }
 .ar-can > .sayi, .ar-ofke > .sayi { text-align: right; font-variant-numeric: tabular-nums; letter-spacing: .04em; }
 .ar-can > .sayi { right: 18px; top: 6px; height: 18px; line-height: 18px; font-size: 13px; min-width: 30px; }
-.ar-ofke > .sayi { right: 17px; top: 6px; height: 16px; line-height: 16px; font-size: 12px; min-width: 26px; }
+.ar-ofke > .sayi { right: 18px; top: 6px; height: 16px; line-height: 16px; font-size: 12px; min-width: 26px; }
 .ar-sol-alt.kritik .ar-can .nabiz { animation: ar-nabiz .85s ease-in-out infinite; }
 @keyframes ar-nabiz { 0%, 100% { opacity: 0; } 45% { opacity: .45; } }
 .ar-sol-alt.vuruldu .ar-can { animation: ar-sars .28s linear; }
@@ -477,17 +477,17 @@ body.d-mola .ar-uyari, body.d-mola .ar-ipucu, body.d-mola .ar-hikaye, body.d-mol
 @keyframes ar-kenar { 0%, 100% { opacity: .2; } 45% { opacity: .5; } }
 
 /* Öfke */
-.ar-ofke { position: absolute; left: 12px; top: 40px; width: 284px; height: 28px; filter: drop-shadow(0 3px 2px rgba(0,0,0,.7)); }
+.ar-ofke { position: absolute; left: var(--can-sol); top: 40px; width: var(--can-genislik); height: 28px; filter: drop-shadow(0 3px 2px rgba(0,0,0,.7)); }
 .ar-ofke .kanal {
-  left: 11px; top: 6px; width: 261px; height: 16px; overflow: hidden;
+  left: 12px; top: 6px; width: 285px; height: 16px; overflow: hidden;
   background: repeating-linear-gradient(-62deg, rgba(255,230,200,.05) 0 1px, transparent 1px 6px), linear-gradient(180deg, #150c07, #26170e);
-  clip-path: polygon(0 .6px, 109px 0, 261px 1px, 261px 16px, 119px 16.8px, 0 16.2px);
+  clip-path: polygon(0 .6px, 113px 0, 285px 1px, 285px 16px, 131px 16.8px, 0 16.2px);
 }
 .ar-ofke .dolu {
-  left: 0; top: 0; width: 276px; height: 16px; overflow: hidden; transform: translateX(-276px);
+  left: 0; top: 0; width: 300px; height: 16px; overflow: hidden; transform: translateX(-100%);
   background: var(--d-kor-net) 0 0 / 260px 16px repeat-x,
     linear-gradient(180deg, #fff0c4 0, #fff0c4 2px, #ffc46a 2px, #ffab3e 60%, #e98a24 100%); /* açık turuncu: içindeki koyu yazı okunsun */
-  clip-path: polygon(0 0, 262px 0, 270px 3.5px, 264px 8px, 275px 11.5px, 261px 16px, 0 16px);
+  clip-path: polygon(0 0, 285px 0, 293px 3.5px, 289px 8px, 299px 11.5px, 285px 16px, 0 16px);
   transition: transform .15s linear;
 }
 /* alev: keskin kıvılcım çizgileri kayar (ucuz: yalnız kaydırma + saydamlık) */
@@ -509,7 +509,7 @@ body.d-mola .ar-uyari, body.d-mola .ar-ipucu, body.d-mola .ar-hikaye, body.d-mol
   z-index: 3;
 }
 .ar-ofke .q {
-  position: absolute; left: 288px; top: -4px; height: 34px;
+  position: absolute; left: calc(100% + 4px); top: -4px; height: 34px;
   display: inline-flex; align-items: center; gap: 5px;
   opacity: 0; transform: scale(.85); transition: opacity .15s;
   filter: drop-shadow(0 2px 0 #000);
@@ -530,7 +530,7 @@ body.d-mola .ar-uyari, body.d-mola .ar-ipucu, body.d-mola .ar-hikaye, body.d-mol
 @keyframes ar-cagri { 0% { filter: drop-shadow(0 3px 2px rgba(0,0,0,.7)) brightness(2.2); } 100% { filter: drop-shadow(0 3px 2px rgba(0,0,0,.7)); } }
 /* öfke açık: kalan saniye şeridin sağında */
 .ar-ofke .geri {
-  position: absolute; left: 292px; top: 1px; height: 26px; line-height: 26px; min-width: 22px;
+  position: absolute; left: calc(100% + 8px); top: 1px; height: 26px; line-height: 26px; min-width: 22px;
   font-size: 22px; font-weight: bold; color: #ffd27a; font-variant-numeric: tabular-nums;
   text-shadow: 0 2px 0 #000, 1.5px 0 0 #000, -1.5px 0 0 #000, 0 -1px 0 #000;
   display: none;
@@ -684,6 +684,11 @@ body.d-mola .ar-uyari, body.d-mola .ar-ipucu, body.d-mola .ar-hikaye, body.d-mol
   margin: 0; font-size: 17px; line-height: 1.45; letter-spacing: .02em;
   color: #efe4cc; text-shadow: 0 1px 0 #000;
 }
+.ar-hikaye-yetenek {
+  width: fit-content; max-width: 100%; margin: 12px auto 0; padding: 6px 13px;
+  border-block: 1px solid #8f5736; background: #432216b8; color: #f7dbad;
+  font-size: 15px; font-weight: bold; line-height: 1.5;
+}
 .ar-hikaye-ipucu {
   margin-top: 9px; font-size: 11px; font-weight: bold; letter-spacing: .18em;
   color: #a99d86; text-shadow: 0 1px 0 #000;
@@ -787,8 +792,8 @@ body.d-mola .ar-uyari, body.d-mola .ar-ipucu, body.d-mola .ar-hikaye, body.d-mol
 /* ÖFKE yazısı iki katman: boş (koyu) kısmın üstünde kemik rengi, dolu (açık turuncu) kısmın üstünde koyu kahve. --of = dolu genişlik (px) */
 .ar-ofke > .ad, .ar-ofke > .sayi { clip-path: inset(-4px -4px -4px calc(var(--of, 0px) - var(--x0, 0px))); }
 .ar-ofke > .ad { --x0: 8px; }
-.ar-ofke > .sayi { clip-path: inset(-4px -4px -4px calc(var(--of, 0px) - 230px)); }
-.ar-ofke .yz { position: absolute; left: 11px; top: 6px; width: 261px; height: 16px; pointer-events: none; z-index: 4; clip-path: inset(-4px calc(261px - var(--of, 0px)) -4px 0); }
+.ar-ofke > .sayi { clip-path: inset(-4px -4px -4px calc(var(--of, 0px) - 254px)); }
+.ar-ofke .yz { position: absolute; left: 12px; top: 6px; width: 285px; height: 16px; pointer-events: none; z-index: 4; clip-path: inset(-4px calc(100% - var(--of, 0px)) -4px 0); }
 .ar-ofke .yz .ad, .ar-ofke .yz .sayi { position: absolute; top: 0; height: 16px; line-height: 16px; font-weight: bold; color: #3a1500; text-shadow: 0 1px 0 rgba(255,240,200,.75); white-space: nowrap; }
 .ar-ofke .yz .ad { left: 8px; font-size: 11px; letter-spacing: .3em; }
 .ar-ofke .yz .sayi { right: 5px; font-size: 12px; min-width: 26px; text-align: right; font-variant-numeric: tabular-nums; letter-spacing: .04em; }

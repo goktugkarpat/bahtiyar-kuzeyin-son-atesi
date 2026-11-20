@@ -231,10 +231,10 @@
     el.canIz = el.can.querySelector('.iz'); el.canDolu = el.can.querySelector('.dolu'); el.canSayi = el.can.querySelector('.sayi');
     // öfke: kor şeridi
     el.ofke = $('div', 'ar-ofke', el.solAlt,
-      '<svg class="alt" viewBox="0 0 284 28"><path d="M4 3L100 1.4 280 2.6 282.6 14 279 26.4 150 27 3 25.8 1.2 14z" fill="#2e2622" stroke="#000" stroke-width="2.2" stroke-linejoin="round"/></svg>' +
+      '<svg class="alt" viewBox="0 0 310 28"><path d="M4 3L105 1.4 306 2.6 308.5 14 305 26.4 164 27 3 25.8 1.2 14z" fill="#2e2622" stroke="#000" stroke-width="2.2" stroke-linejoin="round"/></svg>' +
       '<div class="kanal"><i class="dolu"><i class="alev"></i></i></div><span class="ad">ÖFKE</span><b class="sayi">0</b><div class="yz"><span class="ad">ÖFKE</span><b class="sayi">0</b></div>' +
-      '<svg class="ust" viewBox="0 0 284 28"><path d="M11 6.2L120 5.6 272 6.6v15L130 22.4 11 21.8z" fill="none" stroke="#000" stroke-width="2.6" stroke-linejoin="round"/>' +
-      '<path d="M11 6.2L120 5.6 272 6.6v15L130 22.4 11 21.8z" fill="none" stroke="#d9b98a" stroke-width="1.2" stroke-linejoin="round"/></svg>' +
+      '<svg class="ust" viewBox="0 0 310 28"><path d="M12 6.2L125 5.6 297 6.6v15L143 22.4 12 21.8z" fill="none" stroke="#000" stroke-width="2.6" stroke-linejoin="round"/>' +
+      '<path d="M12 6.2L125 5.6 297 6.6v15L143 22.4 12 21.8z" fill="none" stroke="#d9b98a" stroke-width="1.2" stroke-linejoin="round"/></svg>' +
       '<span class="q"><svg viewBox="0 0 28 28"><path d="M5 3.5l14-2 7 6.5.6 12-6.8 6.2-13.6.4L1.4 19 2 8.4z" fill="#e6d6b2" stroke="#000" stroke-width="2.2" stroke-linejoin="round"/>' +
       '<path d="M6.4 5.2l11.6-1.6 5.6 5.2.5 9.8-5.5 5-11 .3-4-5.9.5-8.4z" fill="none" stroke="#fff4d6" stroke-opacity=".55" stroke-width="1" stroke-linejoin="round"/>' +
       '<text x="14" y="20.2" text-anchor="middle" font-family="Palatino Linotype,Palatino,Georgia,serif" font-weight="bold" font-size="18" fill="#3a0c06">E</text></svg><b class="q-yazi">HAZIR</b></span><b class="geri">6</b>');
@@ -262,11 +262,14 @@
         '<div class="ar-hikaye-baslik"></div>' +
         '<div class="ar-hikaye-ayrac"></div>' +
         '<p class="ar-hikaye-metin"></p>' +
+        '<div class="ar-hikaye-yetenek gizli"></div>' +
         '<div class="ar-hikaye-ipucu">Devam etmek için yürü veya karta dokun</div>' +
       '</div>');
     el.hikayeKart = el.hikaye.querySelector('.ar-hikaye-kart');
     el.hikayeBaslik = el.hikaye.querySelector('.ar-hikaye-baslik');
     el.hikayeMetin = el.hikaye.querySelector('.ar-hikaye-metin');
+    el.hikayeYetenek = el.hikaye.querySelector('.ar-hikaye-yetenek');
+    el.hikayeYetenek.innerHTML = IPUCLARI.kasirga;
     el.hikayeKart.addEventListener('click', function (e) {
       if (!hikayeAcik || performance.now() - hikayeAcilmaT < 250) return;
       e.stopPropagation();
@@ -470,6 +473,7 @@
     clearTimeout(hikayeKapatZ); hikayeKapatZ = 0;
     el.hikayeBaslik.textContent = h.baslik;
     el.hikayeMetin.textContent = h.metin;
+    el.hikayeYetenek.classList.toggle('gizli', no !== 2);
     hikayeAcik = true; hikayeSoluyor = false;
     hikayeX = window.OYUNCU?.x ?? 0;
     hikayeY = window.OYUNCU?.y ?? 0;
@@ -587,7 +591,7 @@
     kalkan: 'Kalkanlıyı yandan vur ya da ' + BALTA_TUS + ' balta at',
     cagir: BALTA_TUS + ' baltayı geri çağır — dönüşte yolundakileri biçer',
     ofke: 'Savaş Öfkesi hazır · ' + tus('E'),
-    kasirga: 'Kasırga açıldı · ' + tus('X') + ' basılı tut ve hareket et',
+    kasirga: 'Kasırga açıldı · ' + tus('X') + ' tuşunu basılı tut ve hareket et',
     yakici: SAVUR_TUS + ' savurarak çömleği geri gönder — ateşte durma',
     gormagulKaya: 'Büyük kaya alçalınca ' + SAVUR_TUS + ' savur ve geri sektir',
     vargorKoz: 'Köz küresine ' + SAVUR_TUS + ' savur, toteme geri gönder',
@@ -717,7 +721,7 @@
   }
 
   /* ───────── her kare (yalnız 'oyun') ───────── */
-  var atilSon = -99, atilSure = 0.9, CAN_G = 300, OFKE_G = 276, SERI_PENCERE = 2.6;
+  var atilSon = -99, atilSure = 0.9, CAN_G = 300, SERI_PENCERE = 2.6;
   function oyunT() { var z = O() && O().zaman; return (z && z.t) || ist.sure; }
   function seriSay() {
     var t = oyunT();
@@ -823,7 +827,12 @@
       if (cs !== son.canSayi) { el.canSayi.textContent = cs; son.canSayi = cs; }
 
       var of = yuzde(Math.max(0, Math.min(100, P.ofke || 0)) / 100);
-      if (of !== son.ofke) { el.ofkeDolu.style.transform = 'translateX(' + (-(1 - of) * OFKE_G).toFixed(1) + 'px)'; el.ofke.style.setProperty('--of', (of * 261).toFixed(1) + 'px'); son.ofke = of; }
+      if (of !== son.ofke) {
+        var ofkePiksel = (of * 285).toFixed(1) + 'px';
+        el.ofkeDolu.style.transform = 'translateX(calc(' + ofkePiksel + ' - 100%))';
+        el.ofke.style.setProperty('--of', ofkePiksel);
+        son.ofke = of;
+      }
       var ofs = Math.round(Math.max(0, Math.min(100, P.ofke || 0)));   // şerit içi sayı (sağ uca hizalı)
       if (ofs !== son.ofkeSayi && el.ofkeSayi) { el.ofkeSayi.textContent = ofs; if (el.ofkeSayi2) el.ofkeSayi2.textContent = ofs; son.ofkeSayi = ofs; }
       var ofDurum = P.ofkeli ? 'aktif' : (of >= 1 ? 'hazir' : '');
@@ -1002,7 +1011,7 @@
       istSifirla();
       guncelleGuvenli(0);
       hikayeKontrol();
-      if (aktifBolum() === 2) ipucuIste('kasirga');
+      if (aktifBolum() === 2 && !hikayeGorulen[2]) ipucuIste('kasirga');
     }
     if (d === 'oldu') {
       var B = window.BOLUM; if (B && typeof B.ilerleme === 'number') ist.ilerleme = Math.max(ist.ilerleme, B.ilerleme);
