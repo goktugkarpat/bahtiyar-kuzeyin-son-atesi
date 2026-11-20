@@ -51,7 +51,17 @@ Bahtiyar, sağanak altındaki Yanık Köy’de kayıp bir kafilenin izini bulur.
 - Şifa iksirleri düşmanlardan çıkar. Lav ve ateş alanlarının kenarından dolaş. Bölüm sonu düşmanını yenince sonuç ekranından sonraki bölüme geç.
 - Mola menüsünden bulunduğun bölümü yeniden başlatabilir veya onay verip Yanık Köy’e dönebilirsin. Ana ses, efekt ve müzik ayrı ayarlanır.
 
+## Müzik
+
+Üç bölümün özgün müzikleri, keşif, savaş ve bölüm sonu karşılaşmalarına göre değişir.
+
+- **Yanık Köy** · Ağır savaş yürüyüşü. Korno, çello ve deri davullar.
+- **Kül Geçidi** · Yedi zamanlı ocak ritmi. Pes yaylılar, metal vurgular ve sert davullar.
+- **Ayaz Hisarı** · Beş zamanlı kuzey ezgisi. Uzak nefesliler, koro ve düşük korno sesleri.
+
 ## Kaynaklar ve lisanslar
+
+- Orkestra kayıtları S. Christian Collins’in [GeneralUser GS](https://www.schristiancollins.com/generaluser.php) enstrümanlarıyla bu oyun için üretildi. [Kullanım lisansı](https://github.com/mrbumpy409/GeneralUser-GS/blob/main/documentation/LICENSE.txt).
 
 - Oyun [PixiJS](https://pixijs.com/) kullanır. Kütüphanenin MIT lisansı [vendor klasöründe](vendor/PIXI-LICENSE.txt) yer alır.
 - Bahtiyar’ın [Barbarian modeli](https://opengameart.org/content/rigged-textured-barbarian) ve Gormagul, İnfazcı, Vargor, Buz Zırhlı Muhafız ve Skarn’ın [Executioner modeli](https://opengameart.org/content/rigged-textured-executioner) için özgün model atfı: **Model by thecubber, commissioned by the OpenGameArt.org community (https://opengameart.org).** Modeller [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/) lisanslıdır. Bu oyunda oranlar, zırhlar, yüzeyler, silahlar ve pozlar değiştirilerek modeller sekiz yönlü 2B karakter karelerine dönüştürüldü.

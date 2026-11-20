@@ -1736,17 +1736,68 @@
     return filtre;
   }
 
-  function muzigiCoz(m, t, d) {
+  // Tam miks döngüsü, efektlerle aynı ana miks yoluna girer. Bölüm değişince eski tamponlar bırakılır.
+  function muzikTamponu(m, album, durum) {
+    if (album.tampon[durum]) return album.tampon[durum];
+    var kayit = window.BAHTIYAR_BESTELER && window.BAHTIYAR_BESTELER[album.bolum];
+    if (!kayit || !kayit[durum]) return Promise.resolve(null);
+    var veri = 'data:audio/mpeg;base64,' + kayit[durum];
+    return (album.tampon[durum] = fetch(veri)
+      .then(function (yanit) { return yanit.arrayBuffer(); })
+      .then(function (baytlar) { return m.c.decodeAudioData(baytlar); })
+      .catch(function () { return null; }));
+  }
+
+  function muzikKaydiniBaslat(m) {
+    var mz = m.muz, yol = mz.yol;
+    if (m.cevrimdisi || yol.kayitDenendi || mz.durum === 'yok' || !window.BAHTIYAR_BESTELER) return;
+    yol.kayitDenendi = true;
+    var album = mz.album, durum = mz.durum;
+    if (!album || album.bolum !== m.bolum) {
+      album = mz.album = { bolum: m.bolum, baslangic: null, tampon: Object.create(null) };
+    }
+    muzikTamponu(m, album, durum).then(function (tampon) {
+      if (!tampon || mz.album !== album || mz.yol !== yol) return;
+      var t = Math.max(m.c.currentTime + 0.025, yol.kayitZamani);
+      if (album.baslangic == null || t < album.baslangic || durum === 'dev') album.baslangic = t;
+      var konum = (t - album.baslangic) % tampon.duration;
+      var kaynak = m.c.createBufferSource(), ses = m.c.createGain();
+      kaynak.buffer = tampon; kaynak.loop = true;
+      kaynak.connect(ses); ses.connect(m.muzik);
+      ses.gain.value = 0;
+      ses.gain.setTargetAtTime(1, t, 0.16);
+      kaynak.start(t, konum);
+      yol.kayit = kaynak; yol.kayitKazanc = ses;
+      yol.kuru.gain.setTargetAtTime(0, t, 0.10);
+      yol.yanki.gain.setTargetAtTime(0, t, 0.10);
+      m.drone.gain.cancelScheduledValues(t);
+      m.devKat.gain.cancelScheduledValues(t);
+      m.drone.gain.setTargetAtTime(0, t, 0.15);
+      m.devKat.gain.setTargetAtTime(0, t, 0.15);
+      // Karşılaşma değiştiğinde ses kesilmesin diye sonraki düzenlemeleri sırayla hazırla.
+      var diger = durum === 'sakin' ? 'savas' : 'sakin';
+      muzikTamponu(m, album, diger).then(function () {
+        if (mz.album === album) muzikTamponu(m, album, 'dev');
+      });
+    });
+  }
+
+  function muzigiCoz(m, t, d, kapanis) {
     var mz = m.muz, once = mz.yol, c = m.c;
     if (once) {
-      once.kuru.gain.setTargetAtTime(0, t, 0.058);
-      once.yanki.gain.setTargetAtTime(0, t, 0.058);
-      if (!m.cevrimdisi) setTimeout(function () { once.kuru.disconnect(); once.yanki.disconnect(); }, 450);
+      once.kuru.gain.setTargetAtTime(0, t, 0.10);
+      once.yanki.gain.setTargetAtTime(0, t, 0.10);
+      if (once.kayit) {
+        once.kayitKazanc.gain.setTargetAtTime(0, t, 0.16);
+        once.kayit.stop(t + 0.85);
+        once.kayit.onended = function () { once.kayit.disconnect(); once.kayitKazanc.disconnect(); };
+      }
+      if (!m.cevrimdisi) setTimeout(function () { once.kuru.disconnect(); once.yanki.disconnect(); }, 620);
     }
     var kuru = c.createGain(), yanki = c.createGain();
     [kuru, yanki].forEach(function (g) { g.gain.value = 0; g.gain.setTargetAtTime(1, t, 0.047); });
     kuru.connect(m.muzik); yanki.connect(m.notaYanki);
-    mz.yol = { kuru: kuru, yanki: yanki };
+    mz.yol = { kuru: kuru, yanki: yanki, kayitZamani: t + (kapanis ? 6.9 : 0.13) };
     mz.durum = d; mz.adim = mz.olcu = 0;
     mz.tempo = muzAyar(m, d).tempo;
     mz.sonraki = t + 0.13;
@@ -1851,7 +1902,7 @@
     if (!M || !mz || (!yenile && mz.durum === d)) return;
     if (t == null) t = this.c.currentTime;
     var kapanis = !yenile && mz.durum === 'dev' && d === 'sakin';
-    muzigiCoz(this, t, d);
+    muzigiCoz(this, t, d, kapanis);
     var drone = this.drone.gain, dev = this.devKat.gain;
     drone.cancelScheduledValues(t); dev.cancelScheduledValues(t);
     if (kapanis) {
@@ -1861,6 +1912,7 @@
       this.nota('_kapanis', t + 0.32, { bolum: this.bolum }, 0, 0.42);
     } else drone.setTargetAtTime(M.drone, t, 0.35);
     dev.setTargetAtTime(M.dev, t, 0.43);
+    muzikKaydiniBaslat(this);
   };
 
 
@@ -2097,12 +2149,13 @@
       m.serbest('_karga', m.ortam, oz.karga, null, ra(0.25, 0.45), ra(-0.85, 0.85), 0.7);
       oz.karga += ra(30, 70);
     }
-    // Bölümün ölçüsü: Yanık Köy 4/4, Kül Geçidi 6/8, Ayaz Hisarı 5/4.
+    muzikKaydiniBaslat(m);
+    // Kayda ulaşılamazsa mevcut nota zamanlayıcısı devreye girer.
     if (mz.sonraki < now) mz.sonraki = now + 0.05;
     while (mz.durum !== 'yok' && mz.sonraki < t1) {
       var t = mz.sonraki, a = mz.adim % BESTE[m.bolum].adim, adimSn = 15 / mz.tempo;
       if (a === 0) muzikOlcu(m);
-      besteAdimi(m, t, a, adimSn);
+      if (!mz.yol.kayit) besteAdimi(m, t, a, adimSn);
       mz.adim++; mz.sonraki += adimSn;
     }
     // öfke kalp atışı
@@ -2282,6 +2335,7 @@
     get acik() { return !sessiz && acik; },
     durumBilgi: function () {
       return { sessiz: sessiz, bolum: motor ? motor.bolum : aktifBolum, baglam: motor ? motor.c.state : 'yok', muzik: motor && motor.muz ? motor.muz.durum : muzikDurumu,
+        orkestra: !!(motor && motor.muz && motor.muz.yol.kayit),
         ses: motor ? motor.tumu.filter(function (s) { return s.bit > motor.c.currentTime && !s.kesik; }).length : 0, say: motor ? motor.say : null };
     },
     kayit: function (sn) {
