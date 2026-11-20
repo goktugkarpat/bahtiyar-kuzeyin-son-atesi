@@ -139,6 +139,26 @@ body.d-oyun, body.d-oyun #sahne, body.d-oyun canvas {
     linear-gradient(180deg, rgba(0,0,0,.62) 0%, rgba(0,0,0,.18) 34%, rgba(0,0,0,0) 50%, rgba(0,0,0,.12) 70%, rgba(0,0,0,.66) 100%),
     radial-gradient(ellipse 75% 85% at 50% 58%, rgba(0,0,0,0) 40%, rgba(0,0,0,.5) 100%);
 }
+.ar-baslik-yagmur {
+  position: absolute; inset: 0; overflow: hidden; pointer-events: none;
+}
+.ar-baslik-yagmur > i {
+  position: absolute; inset: -288px -144px 0;
+  background: var(--d-yagmur-0) repeat;
+  opacity: .66; will-change: transform;
+  animation: ar-baslik-yagmur .80s linear infinite;
+}
+.ar-baslik-yagmur > i + i {
+  background-image: var(--d-yagmur-1);
+  opacity: .88; animation-duration: .49s; animation-delay: -.21s;
+}
+@keyframes ar-baslik-yagmur {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(-144px, 288px, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ar-baslik-yagmur > i { animation: none; }
+}
 .ar-baslik-ust { margin-top: 50px; display: flex; flex-direction: column; align-items: center; position: relative; z-index: 1; }
 .ar-perde.baslik .ar-menu { position: absolute; left: 0; right: 0; bottom: 52px; z-index: 1; }
 .ar-perde.baslik .ar-dugme.ana { margin: 4px auto 6px; animation: ar-yuksel .7s cubic-bezier(.2,.8,.3,1) .55s both; }

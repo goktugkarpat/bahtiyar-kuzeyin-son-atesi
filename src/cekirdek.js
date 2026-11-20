@@ -800,11 +800,34 @@
   // Resim sayfalarını ekran kartına ÖNCEDEN yükle (başlıkta, her seferinde bir sayfa): yoksa büyük bir sayfa
   // oyunun ortasında ilk kullanıldığı karede yüklenir ve o kare takılır (düşman/dev ilk göründüğünde).
   // Yalnız ortak paketler ve aktif OYUN.bolum'un paketleri yüklenir.
-  var _onZ = null;
+  var _onZ = null, onYuklemeTemizle = null;
+  function onYuklemeyiDurdur() {
+    if (_onZ) { clearInterval(_onZ); _onZ = null; }
+    if (onYuklemeTemizle) { onYuklemeTemizle(); onYuklemeTemizle = null; }
+  }
   function onYuklemeBaslat() {
     try {
-      if (_onZ) { clearInterval(_onZ); _onZ = null; }
+      onYuklemeyiDurdur();
       var _onDur = OYUN.onYukleme = { toplam: 0, biten: 0, bitti: false }, _onSay = 0;
+      // Yalnız bir büyük sayfanın piksel belleğini elde tut ve bölüm değişiminde bırak.
+      var hazirlanan = null, iptal = false;
+      onYuklemeTemizle = function () {
+        iptal = true;
+        if (hazirlanan && hazirlanan.bitmap) hazirlanan.bitmap.close();
+        hazirlanan = null;
+      };
+      function resmiIsle(bt) {
+        var kaynak = bt.resource;
+        var durum = hazirlanan = { taban: bt, bitti: false, bitmap: null };
+        fetch(kaynak.source.src).then(function (yanit) { return yanit.blob(); }).then(function (blob) {
+          return createImageBitmap(blob, { premultiplyAlpha: bt.alphaMode === PIXI.ALPHA_MODES.UNPACK ? 'premultiply' : 'none' });
+        }).then(function (bitmap) {
+          if (iptal) bitmap.close();
+          else durum.bitmap = bitmap;
+        }, function () {
+          // ImageBitmap desteklenmezse var olan HTMLImageElement yüklemesi devam eder.
+        }).then(function () { durum.bitti = true; });
+      }
       for (var ad0 in paketler) {
         if (!aktifPaketMi(ad0)) continue;
         var bs0 = paketler[ad0].bases || [];
@@ -823,15 +846,35 @@
             for (var i = 0; i < bs.length; i++) {
               var bt = bs[i]; if (!bt) continue; _top++; if (bt._bdOnYuk) { _bit++; continue; }
               if (!bt.valid) { kalan = true; continue; }
-              if (!yapildi) {
+              if (yapildi || (hazirlanan && (hazirlanan.taban !== bt || !hazirlanan.bitti))) {
+                kalan = true; continue;
+              }
+              var kaynak = bt.resource;
+              if (!hazirlanan && typeof createImageBitmap === 'function' && bt.width >= 2048 &&
+                  kaynak instanceof PIXI.ImageResource && !kaynak.createBitmap && kaynak.source.src.startsWith('data:') &&
+                  !Object.keys(bt._glTextures).length) {
+                resmiIsle(bt); kalan = true; continue;
+              }
+              var bitmap = hazirlanan && hazirlanan.bitmap;
+              try {
+                if (bitmap) { kaynak.createBitmap = true; kaynak.bitmap = bitmap; }
                 if (app.renderer && app.renderer.texture && app.renderer.texture.bind) app.renderer.texture.bind(bt);
                 bt._bdOnYuk = true; yapildi = true;
-              } else kalan = true;
+              } finally {
+                if (bitmap) {
+                  if (kaynak.bitmap === bitmap) { bitmap.close(); kaynak.bitmap = null; }
+                  kaynak.createBitmap = false;
+                }
+                hazirlanan = null;
+              }
             }
           }
         } catch (e) { hataKaydet('onYukleme', e); kalan = false; }
         _onDur.toplam = _top; _onDur.biten = _bit + (yapildi ? 1 : 0);
-        if ((!kalan && !yapildi) || ++_onSay > 1500) { clearInterval(_onZ); _onZ = null; _onDur.bitti = true; _onDur.biten = _onDur.toplam; } // arayüz BAŞLA'yı bu bitince açar (19 Kasım: erken başlayınca ilk 2–3 sn takılıyordu)
+        if ((!kalan && !yapildi) || ++_onSay > 1500) {
+          onYuklemeyiDurdur();
+          _onDur.bitti = true; _onDur.biten = _onDur.toplam;
+        }
       }, 12);
     } catch (e) {}
   }
@@ -891,7 +934,7 @@
       // Paint the overlay before texture disposal or allocation can block a frame.
       await sonrakiKare();
       await sonrakiKare();
-      if (_onZ) { clearInterval(_onZ); _onZ = null; }
+      onYuklemeyiDurdur();
       await Promise.all(eksikDosyalar.map(function (ad) {
         return bolumDosyasiYukle(ad).then(function () { gecis.dosyalar.biten++; });
       }));

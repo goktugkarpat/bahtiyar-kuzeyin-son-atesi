@@ -1873,7 +1873,7 @@
     }
   }
   function yagmurGuncelle(gd) {
-    if (bolumNo !== 1 || OYUN.durum === 'yukleniyor') {
+    if (bolumNo !== 1 || OYUN.durum === 'baslik' || OYUN.durum === 'yukleniyor') {
       if (yagmur) yagmur.perde.visible = yagmur.zemin.visible = yagmur.yansima.visible = false;
       return;
     }

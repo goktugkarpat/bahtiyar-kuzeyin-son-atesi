@@ -1,10 +1,12 @@
 # Bahtiyar: Kuzeyin Son Ateşi 🪓
 
-Bahtiyar, yağmur altındaki Yanık Köy’de bir kafileye ait izler bulur. İzler onu kızgın bir madenden, kuzey ordusuna işaret veren karlı bir hisara götürür. Bu Türkçe, yukarıdan görünümlü aksiyon oyununda balta savurur, saldırılardan atılarak kaçar ve biriktirdiğin öfkeyi iki farklı güç için kullanırsın.
+Bahtiyar, sağanak altındaki Yanık Köy’de kayıp bir kafilenin izini bulur. İzler onu kızıl maden ocaklarına, oradan da kuzey ordusuna işaret veren karlı bir hisara götürür. Fare ve klavyeyle oynanan bu Türkçe aksiyon oyununda baltayı savurur, fırlatıp geri çağırır ve biriktirdiğin öfkeyi iki farklı güç için kullanırsın.
 
 **Yetişkinler içindir (18+). Kan ve yoğun şiddet içerir.**
 
 **Oyna** · [Bahtiyar: Kuzeyin Son Ateşi](https://goktugkarpat.github.io/bahtiyar-kuzeyin-son-atesi/)
+
+![Yanık Köy'deki yağmurlu açılış ekranı](ekran/baslik.jpg)
 
 ## Bölümler
 
@@ -13,6 +15,12 @@ Bahtiyar, yağmur altındaki Yanık Köy’de bir kafileye ait izler bulur. İzl
 | I. Yanık Köy | Sağanak altında harabeler, yıkık kilise ve Kemik Çukuru | Gormagul |
 | II. Kül Geçidi | Kızıl kül, maden ocakları ve Lav Köprüsü. Kasırga burada açılır. | Vargor |
 | III. Ayaz Hisarı | Tipi, zincirli tutsaklar ve kuzey ordusunun işaret kulesi | Skarn |
+
+| | |
+|---|---|
+| ![Yanık Köy’de sağanak ve yıkıntılar](ekran/yanik-koy.jpg) | ![Kül Geçidi’nde Kasırga ile maden ovasında savaş](ekran/kul-gecidi.jpg) |
+
+![Ayaz Hisarı’nda kar, meşaleler ve kaya gölgeleri](ekran/ayaz-hisari.jpg)
 
 ## Nasıl açılır
 
@@ -36,9 +44,20 @@ Bahtiyar, yağmur altındaki Yanık Köy’de bir kafileye ait izler bulur. İzl
 | Esc | Mola |
 | Shift + F | Çözünürlük ve FPS göstergesini aç veya kapat |
 
-## Yapım ve atıflar
+### Dövüş ve öfke
+
+- Baltayı fırlattıktan sonra aynı tuşla geri çağır. Geri dönerken yolundaki düşmanlara da vurur. Kalkanlılara yandan yaklaşabilir veya ağır savurmayla savunmalarını açabilirsin.
+- İsabet aldığında veya vurduğunda öfke birikir. **Savaş Öfkesi** tam dolu çubuğu kullanır. İkinci bölümde açılan **Kasırga**, X’i basılı tuttuğun sürece aynı çubuktan harcar. Dönerken hareket edebilirsin.
+- Şifa iksirleri düşmanlardan çıkar. Lav ve ateş alanlarının kenarından dolaş. Bölüm sonu düşmanını yenince sonuç ekranından sonraki bölüme geç.
+- Mola menüsünden bulunduğun bölümü yeniden başlatabilir veya onay verip Yanık Köy’e dönebilirsin. Ana ses, efekt ve müzik ayrı ayarlanır.
+
+## Kaynaklar ve lisanslar
 
 - Oyun [PixiJS](https://pixijs.com/) kullanır. Kütüphanenin MIT lisansı [vendor klasöründe](vendor/PIXI-LICENSE.txt) yer alır.
 - Bahtiyar’ın [Barbarian modeli](https://opengameart.org/content/rigged-textured-barbarian) ve Gormagul, İnfazcı, Vargor, Buz Zırhlı Muhafız ve Skarn’ın [Executioner modeli](https://opengameart.org/content/rigged-textured-executioner) için özgün model atfı: **Model by thecubber, commissioned by the OpenGameArt.org community (https://opengameart.org).** Modeller [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/) lisanslıdır. Bu oyunda oranlar, zırhlar, yüzeyler, silahlar ve pozlar değiştirilerek modeller sekiz yönlü 2B karakter karelerine dönüştürüldü.
 - Bazı gövdeler, kıyafetler ve hareketler [Quaternius](https://quaternius.com/) paketlerinden ([CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/)). Viking sakalı ve bıyığı RehmanPolanski’nin [MakeHuman paketinden](https://static.makehumancommunity.org/assets/assetpacks/bodyparts05.html) (CC0 1.0).
 - Savaş narası Welvyn Z. Porter’ın [Kingly Yell](https://freesound.org/people/WelvynZPorterSamples/sounds/623449/) kaydından düzenlendi (CC0 1.0).
+
+## Yapım ve katkılar
+
+Oyunun fikri, yönü ve oynanış kararları **Göktuğ Karpat**’a aittir. Oyun geliştirme ve cila çalışmalarında **Claude Code** (Anthropic) ve **Codex** (OpenAI) kullanıldı. Kâr amacı taşımayan kişisel bir projedir.

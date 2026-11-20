@@ -165,6 +165,18 @@
   }
   function dokulariKur(k) {
     var D = {};
+    // Başlıktaki yağmur, atlasların WebGL'e yüklenmesinden bağımsızdır.
+    for (var kat = 0; kat < 2; kat++) {
+      var damlalar = '';
+      for (var i = 0; i < (kat ? 17 : 23); i++) {
+        var x = 18 + (i * 71 + i * i * 13 + kat * 17) % 120;
+        var y = (i * 127 + i * i * 19 + kat * 77) % 250;
+        var boy = (kat ? 16 : 10) + (i * 7) % 18;
+        damlalar += '<path d="M' + x + ' ' + y + 'l-' + (boy / 2).toFixed(2) + ' ' + boy +
+          '" stroke-opacity="' + (0.19 + (i % 5) * 0.067).toFixed(2) + '"/>';
+      }
+      D['yagmur-' + kat] = svgUrl(144, 288, '<g fill="none" stroke="#b6c9d7" stroke-width="' + (kat ? 1.25 : 0.85) + '" stroke-linecap="round">' + damlalar + '</g>');
+    }
     // net fırça darbeleri: keskin kenarlı, az ama belirgin (bulanık değil)
     D['firca-net'] = svgUrl(240, 22, '<g fill="none" stroke-linecap="round">' +
       '<path d="M4 6.5C50 5 92 7.6 150 5.8s70 1.4 86 .6" stroke="#ff7a5a" stroke-opacity=".35" stroke-width="1.4"/>' +
@@ -297,6 +309,7 @@
 
     /* başlık */
     var b = perdeler.baslik = $('div', 'ar-perde baslik gizli', kok);
+    $('div', 'ar-baslik-yagmur', b, '<i></i><i></i>').setAttribute('aria-hidden', 'true');
     // ince hareket: yükselen közler (yalnız CSS; her kare JS yok)
     var kz = $('div', 'ar-koz', b), kzh = '';
     for (var ki = 0; ki < 26; ki++) {
