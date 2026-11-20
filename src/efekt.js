@@ -245,6 +245,22 @@
       g.fillStyle = gr; g.beginPath(); g.moveTo(0, 4); g.lineTo(59, 1.3); g.arc(59, 4, 2.7, -Math.PI / 2, Math.PI / 2); g.lineTo(0, 4); g.fill();
       g.fillStyle = 'rgba(255,255,255,0.9)'; g.beginPath(); g.moveTo(26, 4); g.lineTo(61, 2.8); g.lineTo(61, 5.2); g.closePath(); g.fill();
     });
+    D.ofkeKivilcim = tuval(60, 12, function (g) {
+      var iz = g.createLinearGradient(0, 0, 60, 0);
+      iz.addColorStop(0, 'rgba(228,13,22,0)');
+      iz.addColorStop(0.47, 'rgba(243,22,32,0.55)');
+      iz.addColorStop(0.83, 'rgba(255,62,47,0.96)');
+      iz.addColorStop(1, 'rgba(255,116,73,0.98)');
+      g.fillStyle = iz;
+      g.beginPath(); g.moveTo(0, 6); g.quadraticCurveTo(28, 4.8, 53, 1.2);
+      g.quadraticCurveTo(59, 1.2, 60, 6); g.quadraticCurveTo(57, 10.5, 52, 10.2); g.closePath(); g.fill();
+      var cekirdek = g.createLinearGradient(18, 0, 58, 0);
+      cekirdek.addColorStop(0, 'rgba(255,43,32,0)');
+      cekirdek.addColorStop(0.62, 'rgba(255,121,85,0.95)');
+      cekirdek.addColorStop(1, 'rgba(255,237,209,1)');
+      g.strokeStyle = cekirdek; g.lineWidth = 2.2; g.lineCap = 'round';
+      g.beginPath(); g.moveTo(18, 6); g.lineTo(56, 5.8); g.stroke();
+    });
     D.yildiz = tuval(96, 96, function (g) {  // vuruş parlaması (keskin çizgili)
       yumusakDaire(g, 48, 48, 20, [[0, 'rgba(255,255,255,1)'], [0.45, 'rgba(255,255,255,0.55)'], [1, 'rgba(255,255,255,0)']]);
       g.fillStyle = 'rgba(255,255,255,0.98)';
@@ -1768,11 +1784,59 @@
       s.x = g.x + KK_OF[i][0] * d; s.y = g.y + KK_OF[i][1] * d;
     }
   }
+  // Aynı atlas karesini kullan: aynı poz, ayrı doku veya ekran filtresi yok.
+  var OFKE_KENAR_YON = [[-2.9, -1.2], [2.9, -1.2], [0, -3.2]];
+  function ofkeKenarKur(ps) {
+    var arka = new PIXI.Container(), on = new PIXI.Container();
+    arka.name = 'ofke-kor-kenari'; on.name = 'ofke-zirh-isigi';
+    for (var i = 0; i < OFKE_KENAR_YON.length; i++) {
+      var s = new PIXI.Sprite(PIXI.Texture.EMPTY);
+      s.tint = i === 2 ? 0xffb142 : 0xf06424;
+      s.blendMode = ADDm(); arka.addChild(s);
+    }
+    var v = new PIXI.Sprite(PIXI.Texture.EMPTY);
+    v.tint = 0xff7f32; v.blendMode = ADDm(); on.addChild(v);
+    for (var j = 0; j < 2; j++) {
+      var kor = new PIXI.Sprite(D.yumusak);
+      kor.anchor.set(0.5); kor.tint = j ? 0xffad4d : 0xff6e24;
+      kor.blendMode = ADDm(); on.addChild(kor);
+    }
+    ps.addChildAt(arka, 0); ps.addChild(on);
+    KH.ofke = { sahip: ps, arka: arka, on: on };
+    return KH.ofke;
+  }
+  function ofkeKenarGuncelle(ps, g, gorunum) {
+    var k = KH.ofke;
+    if (gorunum < 0.008) {
+      if (k) k.arka.visible = k.on.visible = false;
+      return;
+    }
+    if (!k || k.sahip !== ps) k = ofkeKenarKur(ps);
+    k.arka.visible = k.on.visible = true;
+    var guc = gorunum * (0.91 + 0.09 * Math.sin(gT * 6));
+    for (var i = 0; i < 4; i++) {
+      var s = i === 3 ? k.on.children[0] : k.arka.children[i];
+      var yon = OFKE_KENAR_YON[i];
+      s.texture = g.texture;
+      s.anchor.copyFrom(g.anchor); s.scale.copyFrom(g.scale); s.rotation = g.rotation;
+      s.position.set(g.x + (yon ? yon[0] : 0), g.y + (yon ? yon[1] : 0));
+      s.alpha = guc * (yon ? 0.88 : 0.29);
+    }
+    var boy = g.texture.height * Math.abs(g.scale.y);
+    var govdeY = g.y + (0.38 - g.anchor.y) * boy;
+    for (var j = 0; j < 2; j++) {
+      var kor = k.on.children[j + 1];
+      kor.position.set(g.x + (j ? 1 : -1) * 19, govdeY + (j ? 4 : -3));
+      kor.scale.set(j ? 0.19 : 0.22, j ? 0.13 : 0.17);
+      kor.alpha = guc * (0.21 + 0.08 * Math.sin(gT * 7 + j * 2.3));
+    }
+  }
   function kahramanGuncelle(gd) {
     if (!KH) return;
     var p = oyuncuKonum(), ps = p && p.sprite, g = ps && (ps.g || sporBul(ps));
-    if (!p || !g || !g.texture || g.texture === PIXI.Texture.EMPTY || ps.yerTutucu || !ps.visible) { KH.kontur.visible = false; KH.rontgen.visible = false; KH.koyu.visible = false; return; }
+    if (!p || !g || !g.texture || g.texture === PIXI.Texture.EMPTY || ps.yerTutucu || !ps.visible) { ofkeKenarGuncelle(null, null, 0); KH.kontur.visible = false; KH.rontgen.visible = false; KH.koyu.visible = false; return; }
     var olu = p.canli === false;
+    ofkeKenarGuncelle(ps, g, olu ? 0 : ps.ofkeGorunum || 0);
     var hd = AYAR.barbarKenar ? halkaDoku(g.texture) : null;   // kenar dokusu yalnız barbarKenar açıksa (röntgen artık halkasız)   // kenar dokusu yalnız gerektiğinde
     // kontur (varlik katmanı, barbarla aynı y)
     var ks = KH.konturSp;
@@ -2214,9 +2278,9 @@
       var bAci = p.aci !== undefined ? p.aci : -Math.PI / 2;
       var geriX = -Math.cos(bAci), geriY = -Math.sin(bAci) * 0.65;
       while (ofkeKozAra <= 0) {
-        ofkeKozAra += 0.042;
-        var a = r(0, PI2), rx = r(16, 32), ry = r(7, 15);
-        var kx = p.x + Math.cos(a) * rx, ky = p.y + Math.sin(a) * ry, kz = r(12, 76);
+        ofkeKozAra += 0.040;
+        var a = r(0, PI2), rx = r(16, 38), ry = r(7, 15);
+        var kx = p.x + Math.cos(a) * rx, ky = p.y + Math.sin(a) * ry, kz = r(27, 97);
         var ck = P.al(KUL, D.damla, kx, ky, kz, r(0.45, 0.85));
         if (ck >= 0) {
           P.ek[ck] = 2;
@@ -2227,15 +2291,15 @@
           P.sayac[ck] = r(0, 6);
           P.renk[ck] = sec([0xffb848, 0xff7a24, 0xff5018, 0xffd270]); P.sp[ck].tint = P.renk[ck];
         }
-        if (Math.random() < 0.35) {
-          var k = P.al(KIV, D.cizgi, kx, ky, kz, r(0.28, 0.52));
-          if (k >= 0) {
-            P.vx[k] = geriX * r(28, 65) + r(-18, 18);
-            P.vy[k] = geriY * r(20, 48) + r(-8, 8);
-            P.vz[k] = r(85, 165);
-            P.surt[k] = 1.2; P.yer[k] = -0.18; P.boy[k] = r(0.32, 0.48);
-            P.renk[k] = sec([0xff7028, 0xffa43c, 0xff5020]); P.sp[k].tint = P.renk[k];
-          }
+        // Kısa, beyaz çekirdekli iz omuzdan dışarı fırlar ve kor gibi söner.
+        var yon = Math.random() < 0.5 ? -1 : 1;
+        var k = P.al(KIV, D.ofkeKivilcim, p.x + yon * r(18, 31), p.y + r(-8, 9), r(77, 112), r(0.32, 0.54));
+        if (k >= 0) {
+          P.vx[k] = yon * r(70, 140) + geriX * 35;
+          P.vy[k] = geriY * 24 + r(-14, 14);
+          P.vz[k] = r(160, 258);
+          P.surt[k] = 1.1; P.yer[k] = 0.42; P.boy[k] = r(0.84, 1.18);
+          P.renk[k] = Math.random() < 0.52 ? 0xffffff : 0xff9c97; P.sp[k].tint = P.renk[k];
         }
         if (Math.random() < 0.10) bulut(p.x + r(-22, 22), p.y + r(-6, 6), r(20, 70), sec([0x2a1814, 0x3a2018]), 0.3, r(0.9, 1.4), r(0.7, 1.1), 0.28, 0, geriX * 16 + r(-10, 10), geriY * 12 + r(-4, 2), r(50, 90));
       }
@@ -2287,7 +2351,7 @@
 
   function hayalet(p) {
     var sp = null;
-    try { sp = p.sprite && sporBul(p.sprite); } catch (e) {}
+    try { sp = p.sprite && (p.sprite.g || sporBul(p.sprite)); } catch (e) {}
     if (!sp || !sp.texture) return;
     var s = tekil('normal', sp.texture, kok.hayalet, ADDm()); if (!s) return;
     s.anchor.copyFrom(sp.anchor);

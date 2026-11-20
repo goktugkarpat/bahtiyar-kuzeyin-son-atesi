@@ -154,7 +154,7 @@
       atilT: 0, atilBekle: 0, atilAci: 0, atilVurulan: [], atilDok: 0,
       kasirgaT: 0, kasirgaEvre: '', kasirgaVurulan: new Set(), kasirgaCevre: false, kukreT: 0,
       atT: 0, sersemT: 0, tSavur: 0, tAgir: 0, tAtil: 0, tBalta: 0, kayaSavurT: -Infinity,
-      ofkeT: 0, sonIsabet: 99, adimT: 0, animAd: '', oto: { t: 0, atilT: 0, baltaT: 0 },
+      ofkeT: 0, ofkeGorunum: 0, sonIsabet: 99, adimT: 0, animAd: '', oto: { t: 0, atilT: 0, baltaT: 0 },
       hedefYon: 4, donusT: 0, yFaz: 0, vR: 0, gv: 0, yuruyor: false, durT: 0, ox: null, oy: null,
       fex: null, fey: null, nisanTaze: false, aimKurtar: false, atE: 0, atBekleyen: null, atBirak: 0, sonraki: false, sonrakiAgir: false, kilitAd: '', kilitSon: 0, parlaT: 0,
       hizliT: 0, sersemGecen: 0, tutusTik: 0
@@ -1248,7 +1248,7 @@
   // ---------------------------------------------------------------- ana döngü
   function guncelle(dt) {
     if (!P.sprite) spriteKur();
-    if (!P.canli) { spriteYerlestir(); return; }
+    if (!P.canli) { spriteYerlestir(dt); return; }
     var g = girdiOku(dt);
     var nisan = Math.atan2(g.ny - (P.y - AYAR.nisanYuksek), g.nx - P.x);
 
@@ -1460,14 +1460,20 @@
       } else if (P.sprite && P.sprite.yon !== P.yon) P.sprite.oynat(P.sprite.anim, P.yon, {});
     }
 
-    spriteYerlestir();
+    spriteYerlestir(dt);
   }
-  function spriteYerlestir() {
+  function spriteYerlestir(dt) {
     var s = P.sprite; if (!s) return;
     var tit = P.canli && P.durum === 'sersem' ? Math.sin(OYUN.zaman.t * 95) * 2.5 : 0;
     // aygıt pikseline oturt (kamera da öyle): resim yarım piksele düşüp bulanıklaşmaz / titremez
     var cr = (OYUN.app && OYUN.app.renderer && OYUN.app.renderer.resolution) || 1;
     s.x = Math.round((P.x + tit) * cr) / cr; s.y = Math.round(P.y * cr) / cr; s.zIndex = P.y;
+    // Ölçek yalnızca görüntüye uygulanır; ayak çapası ve çarpışma ölçüleri korunur.
+    var hedef = P.canli && P.ofkeli ? 1 : 0;
+    S.ofkeGorunum += (hedef - S.ofkeGorunum) * (1 - Math.exp(-(hedef ? 12 : 10) * (dt || 0)));
+    if (Math.abs(S.ofkeGorunum - hedef) < 0.005) S.ofkeGorunum = hedef;
+    s.scale.set(1 + S.ofkeGorunum * 0.16, 1 + S.ofkeGorunum * 0.15);
+    s.ofkeGorunum = S.ofkeGorunum;
     // Öfke açılırken zemin dalgası silüetin içinden görünmesin.
     var ofkeGiris = P.ofkeli && S.ofkeT > AYAR.ofkeSure - AYAR.ofkeAcDokunulmaz;
     var yanip = P.canli && P.dokunulmazSure > 0 && !ofkeGiris && P.durum !== 'atil' && ((OYUN.zaman.t * 20) | 0) % 2 === 0;
