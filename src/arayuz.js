@@ -1248,6 +1248,24 @@
   }
 
   /* ───────── dışa açık ───────── */
+  function acilisiGecir() {
+    var perde = document.getElementById('acilis');
+    if (!perde) return;
+    if (OYUN.atla) { perde.remove(); return; }
+    var ticker = OYUN.app.ticker;
+    function ilkKare() {
+      // Pixi sahneyi çizdikten sonra çalışır; zemin yer tutucusu hâlâ görünüyorsa bekle.
+      var hazir = window.BOLUM && BOLUM.girisHazir();
+      var atlasBitti = OYUN.onYukleme?.bitti;
+      if (!hazir && !(atlasBitti && OYUN.katman.zemin.children.length)) return;
+      ticker.remove(ilkKare);
+      perde.setAttribute('aria-hidden', 'true');
+      perde.classList.add('acilis-bitti');
+      setTimeout(function () { perde.remove(); }, 300);
+    }
+    ticker.add(ilkKare, null, PIXI.UPDATE_PRIORITY.UTILITY);
+  }
+
   window.ARAYUZ = {
     hizala: hizala,
     uyar: uyar,
@@ -1265,7 +1283,7 @@
   olaylariBagla();
   if (window.OYUN && OYUN.sistem) {
     OYUN.sistem('arayuz', {
-      baslat: function () { sesUygula(); hazirIzle(false); durumDegisti(durum()); },
+      baslat: function () { sesUygula(); hazirIzle(false); durumDegisti(durum()); acilisiGecir(); },
       guncelle: guncelleGuvenli,
       herKare: function (gdt) {
         cizimBilgisiGuncelle();

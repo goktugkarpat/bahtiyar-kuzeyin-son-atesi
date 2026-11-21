@@ -39,6 +39,35 @@ body.d-oyun, body.d-oyun #sahne, body.d-oyun canvas {
   cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cg fill='none'%3E%3Ccircle cx='16' cy='16' r='8.5' stroke='%23000' stroke-width='4'/%3E%3Ccircle cx='16' cy='16' r='8.5' stroke='%23f4ead2' stroke-width='2'/%3E%3Cpath d='M16 1v8M16 23v8M1 16h8M23 16h8' stroke='%23000' stroke-width='4'/%3E%3Cpath d='M16 2v6.5M16 23.5V30M2 16h6.5M23.5 16H30' stroke='%23f4ead2' stroke-width='2'/%3E%3Crect x='14' y='14' width='4' height='4' fill='%23ff3a22' stroke='%23000' stroke-width='1'/%3E%3C/g%3E%3C/svg%3E") 16 16, crosshair !important;
 }
 
+/* İlk dünya karesi hazır olana dek, atlaslardan bağımsız açılış. */
+#acilis {
+  position: fixed; inset: 0; z-index: 30;
+  display: grid; place-items: center;
+  background: radial-gradient(ellipse at 50% 45%, #31231e, #1d1a1a 47%, #100f10 88%);
+  color: var(--kemik); font-family: var(--yazi); text-align: center;
+  transition: opacity .28s ease-out;
+}
+#acilis.acilis-bitti { opacity: 0; pointer-events: none; }
+.acilis-kart { width: min(430px, 84vw); padding: 27px 0; }
+.acilis-kart strong {
+  display: block; margin: 0 0 10px;
+  color: #ead4a3; text-shadow: 0 2px 0 #100c0d;
+  font: 700 clamp(34px, 8vw, 68px)/1 Georgia, serif;
+  letter-spacing: .105em;
+}
+.acilis-kart > span { display: block; font-size: clamp(14px, 3.5vw, 20px); color: #cb9478; }
+.acilis-kart .acilis-durum {
+  position: relative; margin: 23px auto 0; padding-top: 13px;
+  color: #cabba4; font-size: 14px;
+}
+.acilis-durum::before {
+  content: ""; position: absolute; top: 0; left: 12%; right: 12%; height: 1px;
+  background: linear-gradient(90deg, transparent, #947052 28%, #dcad72 50%, #947052 72%, transparent);
+}
+@media (prefers-reduced-motion: reduce) {
+  #acilis { transition: none; }
+}
+
 /* Arayüz katmanı: JS tuvalin dikdörtgenine oturtur */
 #arayuz {
   position: fixed; left: 0; top: 0; width: 100vw; height: 100vh;

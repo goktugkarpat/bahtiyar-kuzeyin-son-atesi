@@ -1396,6 +1396,45 @@
       if (cevreKare('maden_0')) bekleyenGercek = true;
       g.fillStyle = '#25211e'; g.fillRect(bx, by, bw, bh);
     }
+    // Lavın kavurduğu uçlar ve eski demir yamalar döşemenin içine çizilir.
+    var damar = tohumluRast(4712);
+    [bx, bx + bw].forEach(function (x, taraf) {
+      var yon = taraf ? -1 : 1, is = g.createLinearGradient(x, 0, x + yon * 75, 0);
+      is.addColorStop(0, 'rgba(18,12,14,.86)');
+      is.addColorStop(.43, 'rgba(32,17,14,.43)');
+      is.addColorStop(1, 'rgba(42,24,18,0)');
+      g.fillStyle = is;
+      g.fillRect(taraf ? x - 75 : x, by, 75, bh);
+      for (var i = 0; i < 70; i++) {
+        var y = by + damar() * bh, bas = x + yon * (6 + damar() * 68), en = 8 + damar() * 46;
+        g.beginPath(); g.moveTo(bas, y);
+        g.quadraticCurveTo(bas + yon * en * .38, y - 2, bas + yon * en, y + (damar() - .5) * 4);
+        g.strokeStyle = i % 4 ? 'rgba(31,21,18,.48)' : 'rgba(197,124,81,.28)';
+        g.lineWidth = .6 + damar() * 2; g.stroke();
+      }
+    });
+    [[53,73,73,-.19], [231,161,104,.10], [78,329,96,.13], [249,403,75,-.11]].forEach(function (p) {
+      g.save(); g.translate(bx + p[0], by + p[1]); g.rotate(p[3]);
+      var en = p[2], metal = g.createLinearGradient(0, -12, 0, 12);
+      metal.addColorStop(0, '#6b5952'); metal.addColorStop(.22, '#4d4443'); metal.addColorStop(1, '#262126');
+      g.beginPath();
+      g.moveTo(-en / 2, -9); g.lineTo(-en / 2 + 7, -13); g.lineTo(en / 2 - 5, -11);
+      g.lineTo(en / 2, -5); g.lineTo(en / 2 - 3, 8); g.lineTo(en / 2 - 10, 12);
+      g.lineTo(-en / 2 + 6, 10); g.closePath();
+      g.strokeStyle = '#21181a'; g.lineWidth = 3; g.stroke();
+      g.fillStyle = metal; g.fill();
+      for (var i = 0; i < 11; i++) {
+        var x = (damar() - .5) * (en - 22), y = (damar() - .5) * 15;
+        g.beginPath(); g.moveTo(x, y); g.lineTo(x + 3 + damar() * 7, y - 2);
+        g.strokeStyle = 'rgba(166,144,126,.35)'; g.lineWidth = .85; g.stroke();
+      }
+      [-en / 2 + 11, en / 2 - 11].forEach(function (x) {
+        g.beginPath(); g.arc(x, 0, 3.9, 0, Math.PI * 2); g.fillStyle = '#272023'; g.fill();
+        g.beginPath(); g.arc(x - .4, -.65, 2.2, 0, Math.PI * 2); g.fillStyle = '#968074'; g.fill();
+      });
+      g.restore();
+    });
+
     // Demir kirişler & perçinli geçiş plakaları
     g.strokeStyle = 'rgba(10,8,7,0.7)'; g.lineWidth = 2;
     for (var sy = by + 22; sy < by + bh; sy += 36) {
@@ -1495,7 +1534,99 @@
     g.beginPath(); for (x = -20; x <= W + 20; x += 20) g.lineTo(x, kenarY(x, false)); g.stroke();
     g.beginPath(); for (x = -20; x <= W + 20; x += 20) g.lineTo(x, kenarY(x, true)); g.stroke();
 
+    // Nehrin dışında kalan yığılmış bazalt. Göz hizasındaki ince kenarlar lavı tutar.
+    var kirik = tohumluRast(4593);
+    for (var yan = 0; yan < 2; yan++) for (var n = 0; n < 29; n++) {
+      var rx = 16 + n * 44 + kirik() * 22;
+      var ry = kenarY(rx, !!yan) + (yan ? 1 : -1) * (16 + kirik() * 32);
+      var en = 8 + kirik() * 15, boy = 3 + kirik() * 7;
+      if (rx + en > KOPRU_2.x1 - 20 && rx - en < KOPRU_2.x2 + 20) continue;
+      g.beginPath(); g.moveTo(rx - en, ry + boy * .28);
+      g.lineTo(rx - en * .63, ry - boy * .73); g.lineTo(rx + en * .15, ry - boy);
+      g.lineTo(rx + en, ry - boy * .2); g.lineTo(rx + en * .64, ry + boy);
+      g.lineTo(rx - en * .56, ry + boy * .89); g.closePath();
+      g.fillStyle = n % 3 ? '#322829' : '#443031'; g.fill();
+      g.strokeStyle = 'rgba(28,18,20,.80)'; g.lineWidth = 1.7; g.stroke();
+      g.beginPath(); g.moveTo(rx - en * .75, ry + (yan ? -1 : 1) * boy * .45);
+      g.lineTo(rx - en * .18, ry + (yan ? -1 : 1) * boy * .78);
+      g.lineTo(rx + en * .65, ry + (yan ? -1 : 1) * boy * .52);
+      g.strokeStyle = 'rgba(183,100,70,.42)'; g.lineWidth = 1.25; g.stroke();
+    }
     kopruCiz2(g, y0, R);
+  }
+
+  // Yerleşik yapıların dibindeki izler, aynı zemin dokusuna bir kez işlenir.
+  function yanikYapiIzleri(g, y0, h) {
+    for (var d of dekorlar) {
+      if (d.y + 143 < y0 || d.y - 38 > y0 + h) continue;
+      var kilise = d.ad === 'kilise_yikik';
+      if (!kilise && !d.ad.startsWith('ev_yanik')) continue;
+      var rast = tohumluRast(d.x * 31 + d.y * 9);
+      var en = kilise ? 144 : 108, yon = d.x < W / 2 ? 1 : -1;
+      var x = d.x + yon * (kilise ? 69 : 90), y = d.y - y0 + 22;
+      g.save(); g.translate(x, y); g.scale(1, .54);
+      var is = g.createRadialGradient(0, 0, 0, 0, 0, en);
+      is.addColorStop(0, 'rgba(33,26,23,.71)');
+      is.addColorStop(.57, 'rgba(40,31,27,.57)');
+      is.addColorStop(1, 'rgba(41,29,25,0)');
+      g.fillStyle = is; g.fillRect(-en, -en, en * 2, en * 2);
+      g.restore();
+      for (var i = 0; i < 38; i++) {
+        var u = (rast() - .5) * en * 1.6 + yon * (i % 3 ? 0 : 51), v = 7 + rast() * 93;
+        var yikik = i % 9 === 0;
+        var w = 2 + rast() * 8 + (yikik ? 10 : 0), boy = 1.5 + rast() * 5 + (yikik ? 3 : 0);
+        g.save(); g.translate(x + u, y + v); g.rotate((rast() - .5) * 2.2);
+        g.beginPath(); g.moveTo(-w, -boy * .24); g.lineTo(-w * .46, -boy);
+        g.lineTo(w * .54, -boy * .75); g.lineTo(w, boy * .14);
+        g.lineTo(w * .29, boy); g.lineTo(-w * .77, boy * .66); g.closePath();
+        g.fillStyle = kilise ? (i % 3 ? '#514a40' : '#645d4d') : (i % 3 ? '#43352b' : '#694837');
+        g.fill(); g.strokeStyle = 'rgba(26,23,20,.74)'; g.lineWidth = 1.4; g.stroke();
+        g.beginPath(); g.moveTo(-w * .69, -boy * .24);
+        g.lineTo(-w * .38, -boy * .72); g.lineTo(w * .36, -boy * .52);
+        g.strokeStyle = kilise ? 'rgba(154,148,128,.42)' : (yikik ? 'rgba(174,125,92,.62)' : 'rgba(165,119,83,.43)');
+        g.lineWidth = .8; g.stroke();
+        g.restore();
+      }
+    }
+  }
+
+  function madenVagonIzleri(g, y0, h) {
+    for (var d of dekorlar) {
+      if (d.ad !== 'maden_vagon' || d.y + 35 < y0 || d.y - 35 > y0 + h) continue;
+      var rast = tohumluRast(d.y * 5 + d.x * 19);
+      var sagda = d.x > W / 2, x = d.x + (sagda ? -28 : 28), y = d.y - y0 + 1;
+      // Vagon resmi rayı yandan gösterir; raylar tekerlerin hizasında yatay uzanır.
+      g.save(); g.translate(x, y); g.rotate(sagda ? Math.PI / 2 + .04 : -Math.PI / 2 - .04); g.scale(.38, 1);
+      var toz = g.createLinearGradient(0, 0, 0, 131);
+      toz.addColorStop(0, 'rgba(28,22,24,.58)');
+      toz.addColorStop(.66, 'rgba(32,25,29,.36)');
+      toz.addColorStop(1, 'rgba(32,25,29,0)');
+      g.fillStyle = toz; g.fillRect(-42, -12, 84, 145);
+      for (var i = 0; i < 7; i++) {
+        var yy = 17 + 15 * i, ters = (rast() - .5) * 8;
+        g.beginPath(); g.moveTo(-41, yy); g.lineTo(39, yy + ters);
+        g.strokeStyle = 'rgba(29,22,24,.78)'; g.lineWidth = 8; g.stroke();
+        g.beginPath(); g.moveTo(-37, yy - 2); g.lineTo(36, yy + ters - 2);
+        g.strokeStyle = 'rgba(99,76,65,.62)'; g.lineWidth = 2; g.stroke();
+      }
+      [-27, 27].forEach(function (dx) {
+        g.beginPath(); g.moveTo(dx, -14); g.lineTo(dx, 113);
+        g.strokeStyle = '#2c2427'; g.lineWidth = 7; g.stroke();
+        g.beginPath(); g.moveTo(dx - 1, -14); g.lineTo(dx - 1, 108);
+        g.strokeStyle = '#796b66'; g.lineWidth = 2.25; g.stroke();
+        for (var j = 0; j < 6; j++) {
+          g.fillStyle = '#47393a'; g.fillRect(dx - 5, 14 + j * 15, 10, 3);
+          g.fillStyle = '#a98b73'; g.fillRect(dx - 4, 14 + j * 15, 2, 1);
+        }
+      });
+      for (var j = 0; j < 19; j++) {
+        var px = (rast() - .5) * 122, py = rast() * 110, r = 2 + rast() * 4;
+        g.beginPath(); g.moveTo(px - r, py); g.lineTo(px, py - r * .7);
+        g.lineTo(px + r, py - r * .18); g.lineTo(px + r * .18, py + r * .65); g.closePath();
+        g.fillStyle = j % 4 ? '#343037' : '#504743'; g.fill();
+      }
+      g.restore();
+    }
   }
 
   function parcaIs2(i) {
@@ -1523,6 +1654,7 @@
     A.push(function () { lavCiz(g, y0, h); });
     // 5. Büyük ölçekli volkanik ton katmanı
     A.push(function () { tonKatmani(g, y0, h); });
+    A.push(function () { madenVagonIzleri(g, y0, h); });
     // 6. 2x zemin süsleri
     A.push(function () {
       for (var s = 0; s < susler.length; s++) {
@@ -1607,6 +1739,129 @@
     }
   }
 
+  // Kuyu avlusunun taşları, ıslak izleri ve enkazı dünya koordinatında zemine işlenir.
+  // Parçalar komşu olduklarında tuval sınırı aynı şekilleri kırpar.
+  function kuyuAvlusu(g, y0) {
+    var rast = tohumluRast(7840);
+    g.save();
+    g.translate(0, -y0);
+
+    // Toprağa oturan düzensiz taş döşeme, eski yolun kenarına doğru seyrekleşir.
+    var taslar = [
+      [923, 7841, 29, 16, .18], [937, 7868, 24, 13, -.35], [970, 7883, 27, 16, .18],
+      [1018, 7892, 25, 14, -.08], [1065, 7888, 22, 11, -.18], [1104, 7870, 27, 12, -.30],
+      [1131, 7845, 20, 12, -.48], [1155, 7822, 18, 11, .22], [1143, 7798, 22, 12, -.32],
+      [1094, 7789, 29, 12, .11], [902, 7870, 12, 6, -.22], [1117, 7895, 11, 7, .39]
+    ];
+    taslar.forEach(function (t, i) {
+      var x = t[0], y = t[1], w = t[2], h = t[3];
+      g.save(); g.translate(x, y); g.rotate(t[4]);
+      var kenar = g.createLinearGradient(0, -h, 0, h);
+      kenar.addColorStop(0, i % 3 ? '#686965' : '#797163');
+      kenar.addColorStop(.43, i % 3 ? '#4e524d' : '#59574d');
+      kenar.addColorStop(1, '#333a38');
+      var uc = rast() - .5, kirik = rast() - .5;
+      g.beginPath(); g.ellipse(0, h * .46, w * 1.12, h * .74, 0, 0, Math.PI * 2);
+      g.fillStyle = 'rgba(19,21,18,.23)'; g.fill();
+      g.beginPath();
+      g.moveTo(-w, -h * (.20 + uc * .25));
+      g.lineTo(-w * (.58 + kirik * .28), -h * .88); g.lineTo(w * (.11 + uc * .35), -h);
+      g.lineTo(w * (.74 - kirik * .22), -h * (.60 - uc * .20)); g.lineTo(w, h * .13);
+      g.lineTo(w * (.61 + kirik * .3), h * .90); g.lineTo(-w * (.24 + uc * .45), h);
+      g.lineTo(-w * .83, h * (.59 - kirik * .32)); g.closePath();
+      g.strokeStyle = 'rgba(19,22,21,.73)'; g.lineWidth = 3.6; g.stroke();
+      g.fillStyle = kenar; g.fill();
+      g.save(); g.clip();
+      for (var j = 0; j < 23; j++) {
+        var dx = (rast() * 2 - 1) * w, dy = (rast() * 2 - 1) * h;
+        var iz = 2 + rast() * w * .40;
+        g.beginPath(); g.moveTo(dx, dy); g.lineTo(dx + iz, dy + iz * (.15 + uc * .38));
+        g.strokeStyle = j % 2 ? 'rgba(176,171,150,.21)' : 'rgba(16,30,33,.24)';
+        g.lineWidth = .55 + rast() * 1.48; g.stroke();
+      }
+      g.strokeStyle = 'rgba(126,144,138,.46)'; g.lineWidth = 1.2;
+      g.beginPath(); g.moveTo(-w*.84,-h*.18); g.lineTo(-w*.54,-h*.69); g.lineTo(w*.13,-h*.83);
+      g.lineTo(w*.68,-h*.47); g.stroke();
+      g.strokeStyle = 'rgba(24,32,32,.56)'; g.lineWidth = 1.25;
+      g.beginPath(); g.moveTo(w*.29,-h); g.lineTo(w*.22,-h*.44); g.lineTo(w*.38,-h*.04);
+      g.lineTo(w*.29,h*.34); g.stroke();
+      g.restore(); g.restore();
+    });
+
+    // Zemindeki eski kırıklar, kaldırımın üst yüzeyine sınırlı kalır.
+    var asinma = [
+      [644, 7694, 45, 12], [720, 7718, 39, 11], [682, 7760, 36, 10], [790, 7775, 32, 10],
+      [743, 7836, 30, 14], [796, 7860, 28, 8], [709, 7893, 34, 14], [677, 7932, 37, 9],
+      [759, 7950, 34, 11], [822, 7981, 26, 8]
+    ];
+    asinma.forEach(function (t, i) {
+      var x=t[0], y=t[1], en=t[2], boy=t[3], yon=i%2 ? -1 : 1;
+      g.save(); g.translate(x,y); g.scale(yon,1);
+      var islak = g.createRadialGradient(0,0,1,0,0,en);
+      islak.addColorStop(0, 'rgba(42,53,54,.45)'); islak.addColorStop(1, 'rgba(42,53,54,0)');
+      g.save(); g.scale(1, .43); g.fillStyle = islak; g.fillRect(-en,-en,en*2,en*2); g.restore();
+      g.beginPath();
+      g.moveTo(-en*.79, -boy*.5); g.lineTo(-en*.25,-boy*.17); g.lineTo(-en*.03,boy*.15);
+      g.lineTo(en*.36,-boy*.14); g.lineTo(en*.61,boy*.38);
+      g.strokeStyle='rgba(25,33,36,.77)'; g.lineWidth=1.55; g.stroke();
+      g.translate(0, .95);
+      g.strokeStyle = 'rgba(143,153,149,.25)'; g.lineWidth = .80; g.stroke();
+      for (var j=0; j<14; j++) {
+        var dx=(rast()*2-1)*en*.8, dy=(rast()*2-1)*boy;
+        g.fillStyle=j%2 ? 'rgba(156,159,145,.23)' : 'rgba(24,28,30,.31)';
+        g.fillRect(dx,dy,.7+rast()*4,.6+rast()*1.1);
+      }
+      g.restore();
+    });
+
+    // Taşların alt cebinde su birikir, meşale yönündeki kenar sıcak rengi tutar.
+    [[900,7857,23,8],[953,7907,38,9],[1035,7914,37,11],[1110,7904,25,8]]
+      .forEach(function (p) {
+        var x=p[0], y=p[1], w=p[2], h=p[3];
+        g.beginPath(); g.moveTo(x-w,y+1);
+        g.bezierCurveTo(x-w*.74,y-h*.80,x+w*.24,y-h,x+w,y-h*.08);
+        g.bezierCurveTo(x+w*.74,y+h*.68,x-w*.51,y+h,x-w,y+1);
+        var su = g.createLinearGradient(0,y-h,0,y+h);
+        su.addColorStop(0,'rgba(29,38,40,.81)');
+        su.addColorStop(.49,'rgba(52,62,63,.69)');
+        su.addColorStop(1,'rgba(129,108,76,.42)');
+        g.fillStyle=su; g.fill();
+        g.beginPath(); g.moveTo(x-w*.51,y-h*.46);
+        g.quadraticCurveTo(x,y-h*.8,x+w*.47,y-h*.28);
+        g.strokeStyle='rgba(213,183,128,.42)'; g.lineWidth=1; g.stroke();
+      });
+
+    // Çökmüş çitin kömürleşmiş tahtaları ve dökülen küçük taşlar kenarda kalır.
+    [[1133,8014,58,-.40], [1097,7994,43,.19], [1152,7989,66,.54], [465,7935,53,.34]]
+      .forEach(function(p) {
+        g.save(); g.translate(p[0],p[1]); g.rotate(p[3]);
+        var w=p[2]*.5;
+        g.beginPath(); g.moveTo(-w,-4); g.lineTo(w*.56,-6); g.lineTo(w,-2);
+        g.lineTo(w*.74,1); g.lineTo(w*.86,5); g.lineTo(-w*.72,6); g.lineTo(-w,2); g.closePath();
+        g.fillStyle='#2f2925';g.fill();g.strokeStyle='#191a17';g.lineWidth=2.7;g.stroke();
+        g.save();g.clip();
+        for (var j=0;j<6;j++) {
+          g.beginPath(); g.moveTo(-w,-4+j*1.8);
+          g.quadraticCurveTo(w*.31,-6+j*1.9,w,-4+j*1.6);
+          g.strokeStyle=j%2 ? 'rgba(127,98,67,.56)' : 'rgba(12,15,14,.56)';
+          g.lineWidth=.8;g.stroke();
+        }
+        g.restore();g.restore();
+      });
+    [[1121,8000,42,25],[963,7922,60,17],[922,7873,28,17],[475,7943,44,21]]
+      .forEach(function(p) {
+        for (var i=0;i<18;i++) {
+          var x=p[0]+(rast()*2-1)*p[2], y=p[1]+(rast()*2-1)*p[3];
+          var w=1.8+rast()*5.7, h=1.2+rast()*2.9;
+          g.beginPath();g.moveTo(x-w,y);g.lineTo(x-w*.27,y-h);g.lineTo(x+w,y-h*.28);
+          g.lineTo(x+w*.57,y+h);g.lineTo(x-w*.42,y+h*.64);g.closePath();
+          g.fillStyle=i%3===0 ? '#645c4d' : '#3e4039';g.fill();
+          g.strokeStyle='rgba(27,27,22,.77)';g.lineWidth=.9;g.stroke();
+        }
+      });
+    g.restore();
+  }
+
   // Parça çizimi ADIM ADIM: bir parçayı tek karede çizmek ~30–70 ms sürüyordu (her ~1000 px'de bir 'takılma').
   // Ekrana girmeden önce birkaç kareye bölünerek (kare başına ≤ ~4 ms) hazırlanır; ekranda eksik kalırsa hemen çizilir.
   function parcaIs(i) {
@@ -1651,6 +1906,8 @@
     // 6. büyük ölçekli ton/renk değişimi (tekrarı ve düz alanı kırar)
     A.push(function () { tonKatmani(g, y0, h); });
     A.push(function () { yagmurBirintileri(g, y0, h); });
+    if (y0 < 8050 && y0 + h > 7660) A.push(function () { kuyuAvlusu(g, y0); });
+    A.push(function () { yanikYapiIzleri(g, y0, h); });
     // 7. süsler
     A.push(function () { for (var s = 0; s < susler.length; s++) {
       // kapsam: 'kendi' boyundaki yama_* süslerde boy=1 (ölçek) → gerçek yarı boy resimden; yoksa parça sınırında yarım kalıp DÜZ DİKİŞ yapıyordu

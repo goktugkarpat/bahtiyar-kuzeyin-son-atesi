@@ -232,7 +232,23 @@
     return true;
   }
   function merdivenIzleri(g, y0) {
-    if (zeminResmi(g, 'tas_merdiven', yolX(2786), 2786-y0, 555, 279)) return;
+    var merkez = yolX(2786), taban = 2786 - y0;
+    if (zeminResmi(g, 'tas_merdiven', merkez, taban, 555, 279)) {
+      // Kırağı, boyalı basamakların iç kenarında kalan kısa, kırık izler.
+      var firca = rastgele(92214);
+      for (var sira = 0; sira < 8; sira++) {
+        var adimY = taban - 103 + sira * 28;
+        for (var yon of [-1, 1]) {
+          var bas = merkez + yon * (166 + firca() * 31), en = 15 + firca() * 19;
+          g.beginPath(); g.moveTo(bas, adimY + 2);
+          g.lineTo(bas - yon * en * .80, adimY + .6);
+          g.lineTo(bas - yon * en, adimY - 1.8);
+          g.lineTo(bas - yon * en * .30, adimY - 2.4);
+          g.closePath(); g.fillStyle = 'rgba(172,201,218,.38)'; g.fill();
+        }
+      }
+      return;
+    }
     var r = rastgele(57409);
     for (var i = 0; i < 8; i++) {
       var wy = 2659 + i * 25 + (i > 3 ? 51 : 0), y = wy - y0;
@@ -390,10 +406,110 @@
       g.restore();
     }
   }
+  function avluKiyisi(g, y0, h) {
+    if (y0 > 672 || y0 + h < 125) return;
+    var r = rastgele(48351);
+    g.save(); g.translate(0, -y0);
+    // Kafesler ile kule dibinde biriken kar, avlunun ortasını ve armayı boş bırakır.
+    [[260, 178, 88, 30, -.24], [205, 301, 96, 37, -.22],
+      [254, 497, 113, 43, -.24], [422, 533, 86, 22, .20],
+      [1041, 174, 84, 26, .13], [1092, 491, 118, 41, .27],
+      [1009, 535, 75, 21, .08], [1098, 598, 134, 39, -.15]]
+      .forEach(function (d) {
+        var en = d[2], boy = d[3];
+        g.save(); g.translate(d[0], d[1]); g.rotate(d[4]); g.scale(en, boy);
+        var birikinti = g.createRadialGradient(-.14, -.29, .04, 0, 0, 1);
+        birikinti.addColorStop(0, 'rgba(154,181,207,.66)');
+        birikinti.addColorStop(.40, 'rgba(146,174,199,.58)');
+        birikinti.addColorStop(.73, 'rgba(124,159,187,.24)');
+        birikinti.addColorStop(1, 'rgba(116,153,188,0)');
+        g.fillStyle = birikinti; g.fillRect(-1, -1, 2, 2);
+        var kar = g.createLinearGradient(0, -.55, 0, .54);
+        kar.addColorStop(0, 'rgba(198,218,228,.45)');
+        kar.addColorStop(.44, 'rgba(145,177,202,.43)');
+        kar.addColorStop(1, 'rgba(91,131,172,0)');
+        g.fillStyle = kar;
+        g.beginPath(); g.moveTo(-.77, .15);
+        g.bezierCurveTo(-.64,-.31,-.57,-.18,-.45,-.31);
+        g.bezierCurveTo(-.22,-.62,-.03,-.25,.12,-.36);
+        g.bezierCurveTo(.43,-.44,.32,-.05,.75,-.01);
+        g.bezierCurveTo(.57,.28,.13,.17,-.07,.42);
+        g.bezierCurveTo(-.35,.25,-.61,.34,-.77,.15);
+        g.fill();
+        g.restore();
+        for (var i = 0; i < 22; i++) {
+          var x = d[0] + (r() - .5) * en * 1.78, y = d[1] + (r() - .5) * boy * 1.22;
+          var uzun = 3 + r() * 18;
+          g.beginPath(); g.moveTo(x, y);
+          g.quadraticCurveTo(x + uzun * .52, y - 2, x + uzun, y + uzun * d[4] * .32);
+          g.lineWidth = .65 + r() * 1.2;
+          g.strokeStyle = i % 4 ? 'rgba(211,229,235,.32)' : 'rgba(77,111,138,.26)';
+          g.stroke();
+        }
+      });
+    // Donmuş döşemenin birkaç kırık köşesi, ince kırağı ve tabaka ayrımı.
+    [[408,205,28,9], [466,286,36,11], [347,412,24,10], [521,594,38,11],
+      [768,608,36,11], [962,575,28,10], [979,177,32,10]]
+      .forEach(function (p) {
+        var x = p[0], y = p[1], en = p[2], boy = p[3];
+        g.beginPath(); g.moveTo(x - en, y);
+        g.lineTo(x - en * .48, y - boy * .73); g.lineTo(x + en * .04, y - boy);
+        g.lineTo(x + en * .51, y - boy * .50); g.lineTo(x + en, y + boy * .13);
+        g.lineTo(x + en * .18, y + boy); g.lineTo(x - en * .68, y + boy * .62); g.closePath();
+        g.fillStyle = 'rgba(54,78,95,.36)'; g.fill();
+        g.beginPath(); g.moveTo(x - en * .77, y - 1);
+        g.lineTo(x - en * .40, y - boy * .55); g.lineTo(x + en * .04, y - boy * .68);
+        g.lineTo(x + en * .41, y - boy * .28);
+        g.strokeStyle = 'rgba(193,218,232,.46)'; g.lineWidth = 1.6; g.stroke();
+      });
+    g.restore();
+  }
+  function esikKiragi(g, y0, h) {
+    // Surların iki yanında taş kırıkları ve rüzgârın biriktirdiği kar.
+    var alanlar = [
+      [KAPI_X - 248, KAPI_Y + 30, 119, 29, -.08],
+      [KAPI_X + 243, KAPI_Y + 32, 127, 31, .11]
+    ];
+    for (var p of alanlar) {
+      if (p[1] - p[3] - 12 > y0 + h || p[1] + p[3] + 12 < y0) continue;
+      var r = rastgele(2367 + Math.round(p[0]) * 7);
+      g.save(); g.translate(p[0], p[1] - y0); g.rotate(p[4]);
+      var en = p[2], boy = p[3];
+      g.save(); g.scale(en, boy);
+      var kar = g.createRadialGradient(-.21, -.18, .08, 0, 0, 1);
+      kar.addColorStop(0, 'rgba(141,168,190,.36)');
+      kar.addColorStop(.47, 'rgba(121,153,178,.25)');
+      kar.addColorStop(1, 'rgba(91,128,158,0)');
+      g.fillStyle = kar; g.fillRect(-1, -1, 2, 2);
+      for (var j = 0; j < 5; j++) {
+        var bas = -.83 + j * .30 + r() * .13, seviye = -.42 + r() * .60;
+        g.beginPath(); g.moveTo(bas, seviye + .18);
+        g.bezierCurveTo(bas + .13, seviye - .06, bas + .30, seviye - .06, bas + .47, seviye);
+        g.bezierCurveTo(bas + .30, seviye + .19, bas + .17, seviye + .19, bas, seviye + .18);
+        g.fillStyle = j % 2 ? 'rgba(179,202,216,.49)' : 'rgba(139,173,197,.53)';
+        g.fill();
+      }
+      g.restore();
+      for (var i = 0; i < 29; i++) {
+        var x = (r() - .5) * en * 1.75, y = (r() - .5) * boy * 1.12, w = 5 + r() * 19;
+        g.beginPath(); g.moveTo(x - w * .5, y + 2);
+        g.lineTo(x - w * .3, y - 3); g.lineTo(x + w * .24, y - 5); g.lineTo(x + w * .61, y);
+        g.lineTo(x + w * .27, y + 3.5); g.closePath();
+        g.fillStyle = i % 3 ? 'rgba(99,133,157,.42)' : 'rgba(66,91,113,.63)'; g.fill();
+        g.beginPath(); g.moveTo(x - w * .44, y + 1);
+        g.lineTo(x - w * .3, y - 3); g.lineTo(x + w * .19, y - 4.7);
+        g.strokeStyle = 'rgba(185,210,225,.51)'; g.lineWidth = 1.15; g.stroke();
+      }
+      g.restore();
+    }
+  }
+
   function zeminAdimlari(g, y0, h) {
     return [function () { karZemin(g, y0, h); }, function () { karKenar(g, y0, h); },
       function () { hisarTas(g, y0, h); },
       function () { buzNehri(g, y0, h); },
+      function () { esikKiragi(g, y0, h); },
+      function () { avluKiyisi(g, y0, h); },
       function () { karIsik(g, y0, h); surZemin(g, y0, h); dekorTemasGolgeleri(g, y0, h); }];
   }
 

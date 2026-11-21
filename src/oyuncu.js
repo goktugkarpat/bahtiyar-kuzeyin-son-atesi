@@ -59,8 +59,6 @@
     ofkeAcSars: 11, ofkeDalgaR: 180, ofkeDalgaGuc: 560, ofkeDalgaHasar: 8, ofkeAcDokunulmaz: 0.35, ofkeKukre: 0.43,
     // ?oto: "ortalama insan" tepki gecikmesi (sn); ?otoGecikme=300 (ms) ile ayarlanır
     otoGecikme: 0,
-    // can geri kazanma
-    oldurCan: 0.2, oldurCanOfke: 0.7,
     adimAralik: 0.3,
     // his / animasyon (oynanışı değiştirmez)
     yonPay: 12,            // derece; 8 yön sınırında titreme önleyici pay
@@ -790,7 +788,6 @@
     S.sonIsabet = 0;
     var oc = ek && isFinite(ek.ofkeCarpan) ? ek.ofkeCarpan : 1;   // balta: hasarıyla orantılı öfke
     if (!P.ofkeli && !(ek && ek.ofkeHarca)) P.ofke = Math.min(100, P.ofke + AYAR.ofkeIsabet * oc + (son.oldu ? AYAR.ofkeOldur : 0));
-    if (son.oldu) iyiles(P.ofkeli ? AYAR.oldurCanOfke : AYAR.oldurCan);
   }
 
   // ---------------------------------------------------------------- savurma
