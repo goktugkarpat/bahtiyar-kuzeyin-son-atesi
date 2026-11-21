@@ -688,7 +688,7 @@
     kasirga: 'Kasırga açıldı · ' + atananTus('x') + ' tuşunu basılı tut ve hareket et',
     yakici: SAVUR_TUS + ' savurarak çömleği geri gönder — ateşte durma',
     gormagulKaya: 'Büyük kaya alçalınca ' + SAVUR_TUS + ' savur ve geri sektir',
-    vargorKoz: 'Köz küresine ' + SAVUR_TUS + ' savur, toteme geri gönder',
+    vargorTotem: 'Kor totemlerine baltayla vur, Vargor’un kalkanını kır',
     ayazSkarn: 'Sütunu araya al. Zincir takılınca Skarn’a vur.',
     ayazBuz: 'Buz çatlıyor — ' + atananTus('bosluk') + ' ile atıl',
     ayazMizrak: 'Buz mızrağı yaklaşınca ' + SAVUR_TUS + ' savur',
@@ -1306,9 +1306,12 @@
     L.on('gormagulKayaHazir', function () { patronIpucuIste('gormagulKaya'); });
     L.on('vargorTotemler', function (v) {
       vargorTotemYaz(v.adet);
-      patronIpucuIste('vargorKoz');
+      patronIpucuIste('vargorTotem');
     });
-    L.on('totemKir', function (v) { if (v.kalan > 0) vargorTotemYaz(v.kalan); });
+    L.on('totemKir', function (v) {
+      if (v.kalan > 0) vargorTotemYaz(v.kalan);
+      else ipucuYapildi('vargorTotem');
+    });
     L.on('kalkanKir', function (v) {
       if (v.boss === window.VARGOR) vargorMekanikYaz('Kalkan kırıldı · Vargor’a vur', v.sure);
     });
@@ -1321,13 +1324,12 @@
     L.on('zirhKir', function (v) { if (v && v.hedef && v.hedef.tur==='buz_muhafiz') ipucuYapildi('ayazMuhafiz'); });
     L.on('sektir', function (v) {
       if (v && v.tur === 'kaya' && v.geri === true) ipucuYapildi('gormagulKaya');
-      else if (v && v.tur === 'kor_kure') ipucuYapildi('vargorKoz');
       else if (v && v.tur === 'buz_mizrak') ipucuYapildi('ayazMizrak');
       else if (!v || v.tur === 'ok') ipucuYapildi('ok');
     });
     L.on('mermi', function (v) { if (v && v.tur === 'ok') ipucuIste('ok'); else if (v && v.tur === 'buz_mizrak') ipucuIste('ayazMizrak'); else if (v && v.tur === 'comlek' && v.sahip !== 'oyuncu') ipucuIste('yakici'); });
     L.on('blok', function (v) {
-      if (v && v.vargor) patronIpucuIste('vargorKoz');
+      if (v && v.vargor) patronIpucuIste('vargorTotem');
       else if (v && v.ayazKapi) ipucuIste('ayazKapi');
       else ipucuIste('kalkan');
     });

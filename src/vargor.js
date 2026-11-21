@@ -27,57 +27,41 @@
     // Evre 1+ — Alevli Gürz Süpürmesi ('vur')
     gurzMenzil: 245,
     gurzYariAci: 1.05,
-    gurzHasar: 34,
+    gurzHasar: 23,
     gurzTele: 0.72,
     gurzKilit: 0.24,
     gurzToparla: 0.45,
     gurzBekleme: 2.35,
 
-    // Evre 1+ — Köz Küre Salvosu ('kayaat')
-    korAdet: 3,
-    korHasar: 26,
-    korSekmeHasar: 180,
-    korSekmeSersem: 0.9,
-    korR: 28,
-    korHiz: 470,
-    korElY: 94,
-    korYukseklik: 72,
-    korAyrik: 119,
-    korTele: 0.72,
-    korKilit: 0.26,
-    korSekmeHiz: 750,
-    korToparla: 0.50,
-    korBekleme: 3.1,
-
     // Ocak Yarması: yan adımla kaçılan, zemine yayılan doğrusal gürz darbesi.
     yarmaMenzil: 465,
     yarmaYariGen: 52,
-    yarmaHasar: 24,
+    yarmaHasar: 17,
     yarmaTele: 0.9,
     yarmaKilit: 0.49,
     yarmaToparla: 0.75,
     yarmaBekleme: 5.2,
 
     // Evre 2 & 3 — Kükreme & Ateş Totemleri ('kukre')
-    totemCanMax: 180,
+    totemCanMax: 120,
     totemR: 38,
     kalkanOran: 0.50,
     kalkanKirSersem: 2.2,
     kalkanKirCarpan: 1.25,
     takviyeSinir: 4,
     isilMenzil: 108,
-    isilHasar: 16,
+    isilHasar: 11,
     isilTele: 1.12,
     isilAra: 5.2,
     kukreTele: 0.65,
     kukreToparla: 0.55,
     kukreItmeMenzil: 220,
-    kukreItmeHasar: 16,
+    kukreItmeHasar: 11,
 
     // Evre 3 — Lav Dalga Halkası ('yerevur')
     lavBasR: 60,
     lavMaxR: 360,
-    lavHasar: 34,
+    lavHasar: 23,
     lavYaySure: 0.95,
     lavKalinlik: 26,
     lavZiplamaEsik: 24,
@@ -93,9 +77,9 @@
   };
 
   var SALDIRI_SIRASI = [
-    ['vur', 'kayaat', 'yarma'],
-    ['kayaat', 'yarma', 'vur'],
-    ['yerevur', 'kayaat', 'yarma', 'vur']
+    ['vur', 'yarma'],
+    ['yarma', 'vur'],
+    ['yerevur', 'yarma', 'vur']
   ];
   var TAKVIYELER = [[], ['kalkanli', 'baskinci'], ['baskinci', 'okcu', 'goblin']];
   var _olayBagli = false;
@@ -117,7 +101,6 @@
       kukreTotemAdet: 0,
       kukreTakviye: null,
       saldiriSira: 0,
-      korHedefleri: [],
       lavHedefleri: [],
       yarmaIzi: null,
       lavHavuzlari: [],
@@ -127,7 +110,6 @@
       isilHedef: null,
       acik: false,
       sonGurzT: -10,
-      sonKorT: -10,
       sonLavT: -10,
       sonYarmaT: -10,
       sersemT: 0,
@@ -342,60 +324,11 @@
     }
   }
 
-  var KOR_KABUK = [
-    [-.77, -.54, -.29, -.91, .10, -.78, -.13, -.40, -.52, -.28],
-    [.18, -.78, .67, -.68, .95, -.25, .52, -.19, .12, -.39],
-    [-.52, -.16, -.19, -.30, -.18, .14, -.46, .48, -.83, .20],
-    [.02, -.26, .49, -.08, .86, -.11, .79, .42, .43, .55, .06, .23],
-    [-.40, .58, -.10, .24, .29, .53, .45, .72, .05, .88, -.40, .79]
-  ];
-  var KOR_YUZEY = [0x654d40, 0x40323a, 0x453239, 0x514147, 0x302831];
-  var SEKME_YUZEY = [0x577b79, 0x2a535a, 0x345961, 0x3d666b, 0x203d47];
-
-  function korKureGorselSusle(m, r, sekme) {
-    if (!window.PIXI || !m || !m.kap) return;
-    var ic = m.kap.ic;
-    if (!(ic instanceof PIXI.Graphics) || Math.abs((ic.scale.x || 1) - r) >= 0.08) return;
-    ic.clear();
-    ic.beginFill(sekme ? 0x123b44 : 0x4d1209, 0.58);
-    ic.drawCircle(0, 0, 1.14);
-    ic.endFill();
-    ic.lineStyle(.105, sekme ? 0x122a31 : 0x280b08, 1);
-    ic.beginFill(sekme ? 0x93ebde : 0xff8825, 1);
-    ic.drawPolygon([-.93, -.33, -.56, -.86, .02, -1.0, .61, -.81, 1, -.32,
-      .89, .39, .53, .77, .04, .98, -.52, .80, -.91, .30]);
-    ic.endFill();
-
-    var renkler = sekme ? SEKME_YUZEY : KOR_YUZEY;
-    ic.lineStyle(.055, sekme ? 0x25494e : 0x673328, 1);
-    for (var i = 0; i < KOR_KABUK.length; i++) {
-      ic.beginFill(renkler[i], 1);
-      ic.drawPolygon(KOR_KABUK[i]);
-      ic.endFill();
-    }
-    // Parlak çekirdek, cüruf levhalarının açıkta bıraktığı çatlaklardan sızar.
-    ic.lineStyle(.066, sekme ? 0xe0fff3 : 0xffebba, .96);
-    ic.moveTo(-.09, -.37);
-    ic.lineTo(-.09, .01);
-    ic.lineTo(.01, .22);
-    ic.lineTo(.29, .43);
-    ic.moveTo(-.09, .01);
-    ic.lineTo(-.40, .43);
-    ic.moveTo(-.06, -.32);
-    ic.lineTo(.09, -.60);
-    ic.lineStyle(.055, sekme ? 0x9bbeb4 : 0x9b7a67, .84);
-    ic.moveTo(-.63, -.53);
-    ic.lineTo(-.31, -.77);
-    ic.moveTo(.25, -.63);
-    ic.lineTo(.55, -.54);
-  }
-
   // ---- Geometrik Fallback Kukla (varlik/vargor.js yüklenene dek) ----
   var GEO_ANIM = {
     dur:    { n: 8, fps: 10, dongu: true,  vurus: 0 },
     yuru:   { n: 8, fps: 12, dongu: true,  vurus: 0 },
     vur:    { n: 8, fps: 13, dongu: false, vurus: 4 },
-    kayaat: { n: 6, fps: 11, dongu: false, vurus: 3 },
     kukre:  { n: 6, fps: 10, dongu: false, vurus: 3 },
     sersem: { n: 4, fps: 10, dongu: true,  vurus: 0 },
     ol:     { n: 8, fps: 7,  dongu: false, vurus: 0 }
@@ -488,7 +421,7 @@
     sagKol.addChild(gurz);
     govde.addChild(sagKol);
 
-    // Sol kol + Kor Küresi el tutacağı
+    // Sol kol
     var solKol = new PIXI.Container();
     solKol.x = -68;
     solKol.y = -172;
@@ -497,17 +430,7 @@
     elG.beginFill(0x2b1d1b);
     elG.drawRoundedRect(-12, -8, 24, 90, 8);
     elG.endFill();
-    var elKure = new PIXI.Graphics();
-    elKure.y = 84;
-    elKure.beginFill(0xff6a1a, 0.92);
-    elKure.drawCircle(0, 0, 17);
-    elKure.endFill();
-    elKure.beginFill(0xffe4a8, 0.95);
-    elKure.drawCircle(0, 0, 8);
-    elKure.endFill();
-    elKure.visible = false;
     solKol.addChild(elG);
-    solKol.addChild(elKure);
     govde.addChild(solKol);
 
     var k = {
@@ -558,7 +481,6 @@
         govde.alpha = 1;
         sagKol.rotation = 0;
         solKol.rotation = 0;
-        elKure.visible = false;
 
         if (this.anim === 'dur') {
           govde.y = Math.sin(t * 3.2) * 3;
@@ -572,10 +494,6 @@
         } else if (this.anim === 'vur') {
           sagKol.rotation = p < 0.45 ? -2.2 * (p / 0.45) : -2.2 + 3.4 * ((p - 0.45) / 0.55);
           govde.rotation = p < 0.45 ? -0.12 : 0.14;
-        } else if (this.anim === 'kayaat') {
-          elKure.visible = p < 0.6;
-          solKol.rotation = p < 0.45 ? -2.1 * (p / 0.45) : -2.1 + 2.9 * ((p - 0.45) / 0.55);
-          sagKol.rotation = 0.3;
         } else if (this.anim === 'kukre') {
           govde.y = -Math.sin(p * Math.PI) * 14;
           sagKol.rotation = -2.3 * Math.sin(p * Math.PI);
@@ -800,23 +718,6 @@
     g.drawCircle(x, y, ir);
   }
 
-  function korHedefCiz(g, sx, sy, tx, ty, r, oran) {
-    if (!g) return;
-    daireCiz(g, tx, ty, r, oran);
-    // Şerit yön oku: siyah alt kontur + kor-turuncu + krem-amber ilerleyen çizgi
-    g.lineStyle(8, 0x000000, 0.6);
-    g.moveTo(sx, sy);
-    g.lineTo(tx, ty);
-    g.lineStyle(3, 0xff7a22, 0.85);
-    g.moveTo(sx, sy);
-    g.lineTo(tx, ty);
-    var ix = sx + (tx - sx) * oran;
-    var iy = sy + (ty - sy) * oran;
-    g.lineStyle(3, 0xffe4a8, 0.95);
-    g.moveTo(sx, sy);
-    g.lineTo(ix, iy);
-  }
-
   function yarmaSeridiCiz(g, oran) {
     var ux = Math.cos(st.hedefAci), uy = Math.sin(st.hedefAci);
     var nx = -uy * AYAR.yarmaYariGen, ny = ux * AYAR.yarmaYariGen;
@@ -842,13 +743,6 @@
     var oran = st.teleSure > 0 ? clamp(st.sayac / st.teleSure, 0, 1) : 1;
     if (st.saldiri === 'vur') {
       koniCiz(g, VARGOR.x, VARGOR.y, AYAR.gurzMenzil, st.hedefAci - AYAR.gurzYariAci, st.hedefAci + AYAR.gurzYariAci, oran);
-    } else if (st.saldiri === 'kayaat') {
-      var sx = VARGOR.x + VARGOR.yon * 36;
-      var sy = VARGOR.y - 8;
-      for (var i = 0; i < st.korHedefleri.length; i++) {
-        var n = st.korHedefleri[i];
-        korHedefCiz(g, sx, sy, n.x, n.y, AYAR.korR, oran);
-      }
     } else if (st.saldiri === 'yarma') {
       yarmaSeridiCiz(g, oran);
     } else if (st.saldiri === 'kukre') {
@@ -1269,24 +1163,6 @@
   }
 
   // ---- Saldırı Uygulamaları ----
-  function korHedefleriniKitle(p) {
-    var a = oyuncuAlani();
-    var aci = Math.atan2(p.y - VARGOR.y, p.x - VARGOR.x);
-    st.hedefAci = aci;
-    VARGOR.yon = Math.cos(aci) >= 0 ? 1 : -1;
-    var merkez = arenaNoktasi(p.x, p.y, a, 9);
-    var dx = -Math.sin(aci), dy = Math.cos(aci);
-    st.korHedefleri = [merkez];
-    for (var i = 1; i < AYAR.korAdet; i++) {
-      var pay = (i % 2 ? -1 : 1) * AYAR.korAyrik * Math.ceil(i / 2);
-      var n = arenaNoktasi(merkez.x + dx * pay, merkez.y + dy * pay, a, 9);
-      if (Math.hypot(n.x - merkez.x, n.y - merkez.y) < AYAR.korR * 2.5) {
-        n = arenaNoktasi(merkez.x + Math.cos(aci) * pay + dx * pay * 0.85, merkez.y + Math.sin(aci) * pay + dy * pay * 0.85, a, 9);
-      }
-      if (!st.korHedefleri.some(function (h) { return Math.hypot(h.x - n.x, h.y - n.y) < AYAR.korR * 1.85; })) st.korHedefleri.push(n);
-    }
-  }
-
   function takviyeCagir(turler) {
     if (!window.DUSMAN || typeof DUSMAN.dogur !== 'function') return;
     st.takviyeler = st.takviyeler.filter(function (s) { return s.d.id === s.id && !s.d.olu; });
@@ -1388,53 +1264,6 @@
 
     if (p.z < 42 && koniIcinde(p.x, p.y, VARGOR.x, VARGOR.y, aci, AYAR.gurzMenzil + p.r, AYAR.gurzYariAci)) {
       oyuncuyaVur(AYAR.gurzHasar, VARGOR.x, VARGOR.y, 450);
-    }
-  }
-
-  function korKureAt() {
-    var sx = VARGOR.x + VARGOR.yon * 36;
-    var sy = VARGOR.y - 8;
-    var noktalar = st.korHedefleri;
-
-    if (window.OYUN && OYUN.kamera && OYUN.kamera.sars) OYUN.kamera.sars(8, 0.16);
-    if (window.OLAY) {
-      OLAY.emit('devKaya', {
-        x: sx,
-        y: sy,
-        hedefX: noktalar[0].x,
-        hedefY: noktalar[0].y,
-        adet: noktalar.length,
-        vargor: true
-      });
-      OLAY.emit('vargorKorAt', { boss: VARGOR });
-    }
-
-    if (!window.MERMI || typeof MERMI.at !== 'function') return;
-    for (var i = 0; i < noktalar.length; i++) {
-      var n = noktalar[i];
-      var mes = Math.hypot(n.x - sx, n.y - sy);
-      var yaySure = clamp(mes / AYAR.korHiz, 0.45, 0.9);
-      var m = MERMI.at('kor_kure', sx, sy, Math.atan2(n.y - sy, n.x - sx), {
-        tur: 'kor_kure',
-        sahip: 'dusman',
-        hasar: AYAR.korHasar,
-        r: AYAR.korR,
-        z: AYAR.korElY,
-        hiz: AYAR.korHiz,
-        kaynak: VARGOR,
-        yay: {
-          x: n.x,
-          y: n.y,
-          sure: yaySure,
-          yukseklik: AYAR.korYukseklik,
-          z0: AYAR.korElY
-        }
-      });
-      if (m) {
-        m._vargorOnceX = m.x;
-        m._vargorOnceY = m.y;
-        korKureGorselSusle(m, AYAR.korR);
-      }
     }
   }
 
@@ -1561,75 +1390,12 @@
     }
   }
 
-  function korHedefSec(m, aci) {
-    var hedef = VARGOR, en = Infinity;
-    for (var i = 0; i < VARGOR.totemler.length; i++) {
-      var t = VARGOR.totemler[i];
-      if (!t.aktif) continue;
-      var dx = t.x - m.x, dy = t.y - m.y;
-      var skor = Math.hypot(dx, dy) * 0.65 + Math.abs(normAci(Math.atan2(dy, dx) - aci)) * 105;
-      if (skor < en) { en = skor; hedef = t; }
-    }
-    return hedef;
-  }
-
-  function koruHedefeYonelt(m, hedef) {
-    var dx = hedef.x - m.x, dy = hedef.y - m.y;
-    var hiz = AYAR.korSekmeHiz / Math.max(1, Math.hypot(dx, dy));
-    m.vx = dx * hiz;
-    m.vy = dy * hiz;
-  }
-
-  function korSektir(e) {
-    if (!VARGOR.aktif || VARGOR.olu || !e || e.tur !== 'kor_kure' || !window.MERMI) return;
-    // Savurma olayı ortak mermi güncellemesinden önce gelir.
-    for (var i = MERMI.liste.length - 1; i >= 0; i--) {
-      var m = MERMI.liste[i];
-      if (m.kaynak !== VARGOR || m.sahip !== 'oyuncu' || m.kilitliHedef || m.x !== e.x || m.y !== e.y) continue;
-      m.kilitliHedef = korHedefSec(m, e.aci);
-      m._vargorOnceX = m.x; m._vargorOnceY = m.y;
-      m.hasar = AYAR.korSekmeHasar;
-      korKureGorselSusle(m, m.r, true);
-      koruHedefeYonelt(m, m.kilitliHedef);
-      break;
-    }
-  }
-
-  function korMermileriGuncelle() {
-    if (!window.MERMI || !Array.isArray(MERMI.liste)) return;
-    for (var i = MERMI.liste.length - 1; i >= 0; i--) {
-      var m = MERMI.liste[i];
-      if (m.tur !== 'kor_kure' || m.kaynak !== VARGOR || m.sahip !== 'oyuncu') continue;
-      var hedef = m.kilitliHedef;
-      if (!hedef) {
-        m._vargorOnceX = m.x; m._vargorOnceY = m.y;
-        korKureGorselSusle(m, m.r, true);
-      }
-      if (!hedef || (hedef !== VARGOR && !hedef.aktif)) {
-        hedef = m.kilitliHedef = korHedefSec(m, Math.atan2(m.vy, m.vx));
-        m.hasar = AYAR.korSekmeHasar;
-      }
-      var dx = m.x - m._vargorOnceX, dy = m.y - m._vargorOnceY;
-      var l2 = dx * dx + dy * dy;
-      var u = l2 > 0 ? clamp(((hedef.x - m._vargorOnceX) * dx + (hedef.y - m._vargorOnceY) * dy) / l2, 0, 1) : 0;
-      var cx = m._vargorOnceX + dx * u, cy = m._vargorOnceY + dy * u;
-      if (hedef !== VARGOR && Math.hypot(hedef.x - cx, hedef.y - cy) <= hedef.r + m.r) {
-        totemVur(hedef.x, hedef.y, 0, m.hasar, 'sekme');
-        if (window.OLAY) OLAY.emit('mermiVur', { tur: m.tur, x: hedef.x, y: hedef.y, sahip: m.sahip });
-        MERMI.birak(m);
-        continue;
-      }
-      m._vargorOnceX = m.x; m._vargorOnceY = m.y;
-      koruHedefeYonelt(m, hedef);
-    }
-  }
-
   // ---- Saldırı Durum Makinesi ----
   function saldir(tur) {
     if (!VARGOR.aktif || VARGOR.olu || !bolumIkiMi()) return false;
     var norm = String(tur || '').toLowerCase();
     if (norm === 'supurme' || norm === 'gurz') norm = 'vur';
-    else if (norm === 'kor' || norm === 'kor_kure') norm = 'kayaat';
+    else if (norm === 'kor' || norm === 'kor_kure' || norm === 'kayaat') return false;
     else if (norm === 'lav' || norm === 'lav_dalga' || norm === 'dalga') norm = 'yerevur';
 
     var p = oyuncuKonum();
@@ -1648,10 +1414,6 @@
     if (norm === 'vur') {
       st.teleSure = AYAR.gurzTele;
       kuklaOynat('vur', true);
-    } else if (norm === 'kayaat') {
-      st.teleSure = AYAR.korTele;
-      korHedefleriniKitle(p);
-      kuklaOynat('kayaat', true);
     } else if (norm === 'yarma') {
       st.teleSure = AYAR.yarmaTele;
       kuklaOynat('yerevur', true);
@@ -1676,7 +1438,6 @@
     saldir('kukre');
     st.kukreTotemAdet = VARGOR.evre;
     st.kukreTakviye = TAKVIYELER[VARGOR.evre - 1];
-    st.sonKorT = -10;
     st.saldiriSira = 0;
     return true;
   }
@@ -1690,9 +1451,6 @@
       if (ad === 'yerevur') {
         if (mes > AYAR.lavMaxR + 30 || t - st.sonLavT < AYAR.lavBekleme) continue;
         st.sonLavT = t;
-      } else if (ad === 'kayaat') {
-        if (mes < (kalkanAktifMi() ? 105 : 155) || t - st.sonKorT < AYAR.korBekleme) continue;
-        st.sonKorT = t;
       } else if (ad === 'yarma') {
         if (mes < 145 || mes > AYAR.yarmaMenzil || t - st.sonYarmaT < AYAR.yarmaBekleme) continue;
         st.sonYarmaT = t;
@@ -1733,15 +1491,6 @@
     VARGOR.can = once - net;
     if (window.OLAY) OLAY.emit('dusmanHasar', { hedef: VARGOR, miktar: net });
     st.vurFlash = 0.12;
-
-    // Seken kor küresi kalkansızken kısa tökezletme uygular
-    if (ops && ops.tur === 'sekme' && miktar >= AYAR.korSekmeHasar && !kalkan && !totemKuruluyor && VARGOR.can > 0 && st.durum !== 'sersem' && st.durum !== 'olum') {
-      if (VARGOR.tg) VARGOR.tg.clear();
-      st.durum = 'sersem';
-      st.saldiri = null;
-      st.sersemT = AYAR.korSekmeSersem;
-      kuklaOynat('sersem', true);
-    }
 
     if (VARGOR.can <= 0) {
       olumBasla();
@@ -1806,7 +1555,6 @@
       sifirla();
     });
 
-    OLAY.on('sektir', korSektir);
     OLAY.on('atil', function () { if (st) st.atilVurulan.clear(); });
   }
 
@@ -1845,7 +1593,6 @@
 
     st.durum = 'dolas';
     st.sonGurzT = -1;
-    st.sonKorT = -1.5;
     st.sonLavT = -2;
 
     kuklaKur();
@@ -1914,7 +1661,6 @@
     }
 
     atilmaTotemKontrol();
-    korMermileriGuncelle();
     totemIsisiGuncelle(dt);
     totemleriGuncelle(dt);
     zeminSaldirilariGuncelle(dt);
@@ -1939,7 +1685,6 @@
       st.sayac += dt;
       var kilitPayi = st.saldiri === 'vur' ? AYAR.gurzKilit : st.saldiri === 'yarma' ? AYAR.yarmaKilit : null;
       if (kilitPayi !== null && st.teleSure - st.sayac > kilitPayi) st.hedefAci = Math.atan2(dy, dx);
-      if (st.saldiri === 'kayaat' && st.teleSure - st.sayac > AYAR.korKilit) korHedefleriniKitle(p);
       if (st.sonAnim) kuklaOynat(st.sonAnim, false);
 
       if (st.sayac >= st.teleSure && !st.vurdu) {
@@ -1948,9 +1693,6 @@
         if (st.saldiri === 'vur') {
           gurzVur();
           st.teleSure = AYAR.gurzToparla;
-        } else if (st.saldiri === 'kayaat') {
-          korKureAt();
-          st.teleSure = AYAR.korToparla;
         } else if (st.saldiri === 'yarma') {
           yarmaVur();
           st.teleSure = AYAR.yarmaToparla;
@@ -2058,7 +1800,6 @@
       durum: st ? st.durum : 'yok',
       saldiri: st && st.saldiri,
       acik: !!(st && st.acik),
-      korHedefleri: st ? st.korHedefleri : [],
       isilHedef: st && st.isilHedef ? st.isilHedef.id : null,
       takviye: st ? st.takviyeler.filter(function (s) { return !s.d.olu && s.d.id === s.id; }).length : 0
     };

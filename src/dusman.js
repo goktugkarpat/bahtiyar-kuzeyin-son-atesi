@@ -2152,15 +2152,6 @@
         g.endFill(); g.lineStyle(0);
         continue;
       }
-      if (m.tur === 'kor_kure') {
-        // Yere düşen közün dış sınırı, dairesel isabet alanıyla aynı kalır.
-        g.lineStyle(4, 0x1c0907, 0.8).drawCircle(m.yay.x1, m.yay.y1, m.r);
-        g.lineStyle(2, 0xff9c48, 0.72 + 0.23 * k).drawCircle(m.yay.x1, m.yay.y1, m.r);
-        g.lineStyle(0).beginFill(0xff591e, 0.16 + 0.20 * k);
-        g.drawCircle(m.yay.x1, m.yay.y1, m.r * (0.25 + 0.75 * k));
-        g.endFill();
-        continue;
-      }
       g.lineStyle(2, 0xff3010, 0.3 + 0.5 * k);
       g.beginFill(0xff2000, 0.08 + 0.22 * k);
       g.drawEllipse(m.yay.x1, m.yay.y1, m.r * (0.6 + 0.4 * k), m.r * (0.6 + 0.4 * k) * 0.55);

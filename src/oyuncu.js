@@ -38,7 +38,7 @@
     sektirKusursuz: 75 /*px; mermi bu kadar yakınken sektirilirse "tam zamanında"*/, sektirKusursuzHiz: 1.85, sektirKusursuzOfke: 4, sektirHedefYay: 55 /*derece*/,
     // balta
     // 19 Kasım balta turu: delip geçer (gidişte/dönüşte herkese bir kez), gidiş 18 → 30, dönüş ≈35
-    baltaHiz: 650, baltaMenzil: 520, baltaDonHiz: 800, baltaHasar: 30, baltaGuc: 220, baltaR: 22, baltaDon: 22 /*rad/sn*/,
+    baltaHiz: 770, baltaMenzil: 520, baltaDonHiz: 800, baltaHasar: 30, baltaGuc: 220, baltaR: 22, baltaDon: 22 /*rad/sn*/,
     baltaDonR: 30, baltaDonHasar: 1.17, baltaDonGuc: 300,   // dönen balta yolundakileri biçer
     baltaBekle: 0.3,       // menzil sonunda havada dönerek bekleme (sn): oyuncu konum alıp geri çağırabilsin
     baltaCagirEn: 0.12,    // atıştan sonra bu kadar sn geçmeden ikinci sağ tık geri çağırmaz (yanlış tetik)
