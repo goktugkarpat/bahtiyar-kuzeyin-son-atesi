@@ -1,10 +1,10 @@
-# Bahtiyar: Kuzeyin Son Ateşi 🪓
+# Bahtiyar 🪓
 
-Bahtiyar, sağanak altındaki Yanık Köy’de kayıp bir kafilenin izini bulur. İzler onu kızıl maden ocaklarına, oradan da kuzey ordusuna işaret veren karlı bir hisara götürür. Fare ve klavyeyle oynanan bu Türkçe aksiyon oyununda baltayı savurur, fırlatıp geri çağırır ve biriktirdiğin öfkeyi iki farklı güç için kullanırsın.
+Kış geçitlerinde kervanlara yol gösteren Bahtiyar, buluşmak için Yanık Köy’e vardığında kafileyi kayıp, köyü yanmış bulur. İzler onu kızıl maden ocaklarına, oradan da kuzey ordusuna işaret veren karlı bir hisara götürür. Fare ve klavyeyle oynanan bu Türkçe aksiyon oyununda baltayı savurur, fırlatıp geri çağırır ve biriktirdiğin öfkeyi iki farklı güç için kullanırsın.
 
 **Yetişkinler içindir (18+). Kan ve yoğun şiddet içerir.**
 
-**Oyna** · [Bahtiyar: Kuzeyin Son Ateşi](https://goktugkarpat.github.io/bahtiyar-kuzeyin-son-atesi/)
+**Oyna** · [Bahtiyar](https://goktugkarpat.github.io/bahtiyar-kuzeyin-son-atesi/)
 
 ![Yanık Köy'deki yağmurlu açılış ekranı](ekran/baslik.jpg)
 
@@ -52,6 +52,7 @@ Başlık ve mola ekranındaki **Grafik** menüsünde iki seçenek bulunur. **Tem
 - Yanık Köy’de savur ve atıl. Kül Geçidi’nde baltayı fırlatıp geri çağırabilir ve ağır vuruş yapabilirsin.
 - Ayaz Hisarı’nda isabet aldığında veya vurduğunda öfke birikir. **Savaş Öfkesi** tam dolu çubuğu kullanır. Üçüncü bölümde açılan **Kasırga**, X’i basılı tuttuğun sürece aynı çubuktan harcar. Dönerken hareket edebilirsin.
 - Şifa iksirleri düşmanlardan çıkar. Lav ve ateş alanlarının kenarından dolaş. Bölüm sonu düşmanını yenince sonuç ekranından sonraki bölüme geç.
+- Mola menüsündeki **Harita ve Hikâye** düğmesi **Kuzeyin Son Ateşi** önsözünün rotasını açar. Bölümleri bitirdikçe sonraki durağın hikâye kartına erişirsin.
 - Mola menüsünden bulunduğun bölümü yeniden başlatabilir veya onay verip Yanık Köy’e dönebilirsin. Ana ses, efekt ve müzik ayrı ayarlanır.
 
 ## Müzik

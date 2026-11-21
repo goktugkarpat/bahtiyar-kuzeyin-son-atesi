@@ -18,15 +18,15 @@
   var HIKAYE_METIN = {
     1: {
       baslik: 'BÖLÜM I — YANIK KÖY',
-      metin: 'Bahtiyar geceyi geçirmek için köye uğradı. Yıkık kilisenin önünde, küllere basmış çıplak ayakların izleri tekerlek izlerine karışıyordu. İkisi de Gormagul’un tuttuğu Kemik Çukuru’na doğru gidiyordu.'
+      metin: 'Bahtiyar, kervanlara kış geçitlerinde yol gösteren bir savaşçıydı. Kafileyle Yanık Köy’de buluşacak, onları dağın öte yanına geçirecekti. Vardığında evler yanmış, meydan boştu. Yıkık kilisenin önündeki taze tekerlek izleri Gormagul’un tuttuğu Kemik Çukuru’na uzanıyordu.'
     },
     2: {
       baslik: 'BÖLÜM II — KÜL GEÇİDİ',
-      metin: "Tekerlek izleri Vargor’un madenine kadar uzanıyordu. Ocak başında, kapıları açık kafesler duruyordu. Kafile buradan geçmişti. Son arabalar, demir daha soğumadan kuzey yoluna çıkmıştı."
+      metin: 'Kemik Çukuru’ndan çıkan izler Vargor’un madenine kadar uzanıyordu. Ocakların yanında açık kafesler, taşta sürüklenmiş zincir izleri vardı. Kafileyi taşıyan arabalar kuzey yoluna çıkmıştı. O yolun sonunda Ayaz Hisarı vardı.'
     },
     3: {
       baslik: 'BÖLÜM III — AYAZ HİSARI',
-      metin: 'Köylüler hisarın avlusunda zincire vurulmuştu. Tepedeki işaret ateşi, Kül Sürüsü’nün kış ordusuna geçidin açık olduğunu bildiriyordu. Bahtiyar’ın, ordu dağa varmadan kafesleri açıp ateşi söndürmesi gerekiyordu.'
+      metin: 'Bahtiyar kafileyi hisarın avlusunda buldu. Sağ kalanlar Skarn’ın askerleri arasında zincire vurulmuştu. Gün ağardığında arabalar kuzeye yola çıkacaktı. Bahtiyar’ın önce tutsakları hisardan sağ çıkarması gerekiyordu.'
     }
   };
   var hikayeGorulen = {};
@@ -430,7 +430,6 @@
         '<path d="M33 143h223l18 9h212l18-9h223 M86 151h151m286 0h151" stroke="#a66940"/>' +
         '<path d="M35 143l13-5v10zm690 0l-13-5v10zM374 151l6-6 6 6-6 6z" fill="#e0a060"/>' +
       '</svg><span>BAHTİYAR</span>');
-    $('div', 'ar-alt-ad', bu, 'Kuzeyin Son Ateşi');
     var m = $('div', 'ar-menu', b);
     var bKontrol, bSes, bGrafik;
     bBasla = dugme(m, 'BAŞLA', basla, 'ana');
@@ -457,6 +456,7 @@
     var molaGovde = $('div', 'ar-mola-govde', molaKart);
     var pm = $('div', 'ar-menu ar-mola-menu', molaGovde), mKontrol, mSes, mGrafik;
     dugme(pm, 'DEVAM ET', function () { durumYap('oyun'); }, 'ana');
+    haritaDugmesi(pm);
     dugme(pm, 'BÖLÜMÜ YENİDEN BAŞLAT', yenidenBasla);
     dugme(pm, 'OYUNUN BAŞINA DÖN', function () { el.baslangicOnayi.showModal(); });
     var molaSekmeler = $('div', 'ar-mola-sekmeler', pm);
@@ -468,6 +468,7 @@
     panelDugmesi(mSes, molaSesDugme, 'ar-mola-ses');
     panelDugmesi(mGrafik, molaGrafikDugme, 'ar-mola-grafik');
     perdeler.mola._paneller = [mKontrol, mSes, mGrafik];
+    haritaKur(kok.parentNode);
 
     el.baslangicOnayi = $('dialog', 'ar-baslangic-onay', kok.parentNode);
     el.baslangicOnayi.setAttribute('aria-labelledby', 'ar-baslangic-baslik');
@@ -586,6 +587,98 @@
   function yenidenBasla() {
     sesiAc();
     if (O() && O().yenidenBasla) O().yenidenBasla(); else durumYap('oyun');
+  }
+
+  var HARITA_ANAHTAR = 'barbar-harita-onsoz';
+  var haritaTamamlanan = 0, haritaSecili = 1;
+  var HARITA_DURAK = [
+    { x: 25, y: 73.8, sira: 'I', goruntu: 'yanik-koy' },
+    { x: 45.5, y: 54.8, sira: 'II', goruntu: 'kul-gecidi' },
+    { x: 78.5, y: 29.5, sira: 'III', goruntu: 'ayaz-hisari' }
+  ];
+  function haritaDugmesi(ebeveyn) {
+    var b = dugme(ebeveyn, 'HARİTA VE HİKÂYE', haritaAc);
+    b.setAttribute('aria-haspopup', 'dialog');
+    b.setAttribute('aria-controls', 'ar-onsoz-harita');
+  }
+  function haritaKur(ebeveyn) {
+    try {
+      var kayit = Number(localStorage.getItem(HARITA_ANAHTAR));
+      if (Number.isInteger(kayit) && kayit >= 0 && kayit <= 3) haritaTamamlanan = kayit;
+    } catch (e) { /* kayıt isteğe bağlı */ }
+    var pencere = el.harita = $('dialog', 'ar-harita', ebeveyn);
+    pencere.id = 'ar-onsoz-harita';
+    pencere.setAttribute('aria-labelledby', 'ar-harita-baslik');
+    var baslik = $('header', 'ar-harita-ust', pencere);
+    var basliklar = $('div', '', baslik);
+    $('span', 'ar-harita-ust-yazi', basliklar, 'ÖNSÖZ HARİTASI');
+    $('h2', '', basliklar, 'Kuzeyin Son Ateşi').id = 'ar-harita-baslik';
+    el.haritaKapat = dugme(baslik, 'KAPAT', function () { pencere.close(); }, 'kucuk');
+    var icerik = $('div', 'ar-harita-icerik', pencere);
+    var arazi = $('div', 'ar-harita-arazi', icerik);
+    $('div', 'ar-harita-kuzey', arazi, 'K<br>↑').setAttribute('aria-hidden', 'true');
+    var yol = $('div', 'ar-harita-yol', arazi,
+      '<svg viewBox="0 0 100 100" preserveAspectRatio="none">' +
+      '<path d="M25 73.8 C28.5 72.7 32.5 73.8 34.2 70.8 S32.4 65.7 31.3 63.3 S34 58.6 37.4 57.3 S42.8 55.7 45.5 54.8"/>' +
+      '<path d="M45.5 54.8 C51 53.7 53 52.1 57.8 52.2 S61 48.9 63.4 47.9 S74 43.8 72.2 41.4 S66.9 37.7 70.8 36.1 S77.4 34.8 77.4 32.6 S77.2 31.1 78.5 29.5"/></svg>');
+    yol.setAttribute('aria-hidden', 'true');
+    el.haritaYol = yol.querySelectorAll('path');
+    el.haritaDuraklar = HARITA_DURAK.map(function (durak, i) {
+      var b = $('button', 'ar-harita-durak', arazi);
+      b.type = 'button';
+      b.style.left = durak.x + '%';
+      b.style.top = durak.y + '%';
+      b.setAttribute('aria-controls', 'ar-harita-kart');
+      $('span', 'ar-harita-isaret', b, durak.sira).setAttribute('aria-hidden', 'true');
+      $('span', 'ar-harita-etiket', b, BOLUM_ADI[i + 1]);
+      b.addEventListener('click', function () { haritaSecili = i + 1; haritaYaz(); });
+      return b;
+    });
+    var kart = el.haritaKart = $('article', 'ar-harita-kart', icerik);
+    kart.id = 'ar-harita-kart';
+    el.haritaGorsel = $('img', '', kart);
+    el.haritaGorsel.alt = '';
+    el.haritaDurum = $('span', 'ar-harita-durum', kart);
+    var metin = $('div', 'ar-harita-metin', kart);
+    metin.setAttribute('aria-live', 'polite');
+    el.haritaAd = $('h3', '', metin);
+    el.haritaMetin = $('p', '', metin);
+    el.haritaIlerleme = $('div', 'ar-harita-ilerleme', kart);
+  }
+  function haritaAc() {
+    if (!el.harita || el.harita.open) return;
+    var sonDurak = Math.min(3, haritaTamamlanan + 1);
+    haritaSecili = durum() === 'mola' ? Math.min(aktifBolum(), sonDurak) : sonDurak;
+    haritaYaz();
+    GIRDI.temizle();
+    el.harita.showModal();
+    el.haritaDuraklar[haritaSecili - 1].focus({ preventScroll: true });
+  }
+  function haritaYaz() {
+    var sonDurak = Math.min(3, haritaTamamlanan + 1);
+    el.haritaDuraklar.forEach(function (b, i) {
+      var no = i + 1, kilitli = no > sonDurak, bitti = no <= haritaTamamlanan;
+      b.classList.toggle('kilitli', kilitli);
+      b.setAttribute('aria-pressed', String(no === haritaSecili));
+      b.setAttribute('aria-label', BOLUM_ADI[no] + (kilitli ? ', kilitli' : bitti ? ', tamamlandı' : ', açık'));
+      b.firstElementChild.textContent = bitti ? '✓' : HARITA_DURAK[i].sira;
+    });
+    el.haritaYol.forEach(function (p, i) { p.classList.toggle('kilitli', i >= haritaTamamlanan); });
+    var kilitli = haritaSecili > sonDurak;
+    var gorsel = 'ekran/' + HARITA_DURAK[haritaSecili - 1].goruntu + '.jpg';
+    if (el.haritaGorsel.getAttribute('src') !== gorsel) el.haritaGorsel.src = gorsel;
+    el.haritaKart.classList.toggle('kilitli', kilitli);
+    el.haritaDurum.textContent = kilitli ? 'Kilitli' : haritaSecili <= haritaTamamlanan ? 'Tamamlandı' : 'Açık';
+    el.haritaAd.textContent = BOLUM_ADI[haritaSecili];
+    el.haritaMetin.textContent = kilitli
+      ? 'Önce ' + BOLUM_ADI[haritaSecili - 1] + ' bölümünü tamamla.'
+      : HIKAYE_METIN[haritaSecili].metin;
+    el.haritaIlerleme.textContent = haritaTamamlanan + ' / 3 bölüm tamamlandı';
+  }
+  function haritaBolumTamamla(no) {
+    if (O().atla || no <= haritaTamamlanan) return;
+    haritaTamamlanan = no;
+    try { localStorage.setItem(HARITA_ANAHTAR, String(no)); } catch (e) { /* kayıt isteğe bağlı */ }
   }
 
   function hikayeYetenekYaz(no) {
@@ -1143,6 +1236,7 @@
     if (!kok) return;
     if (d === sonDurum) return;
     var onceki = sonDurum; sonDurum = d;
+    if (el.harita?.open && d !== 'baslik' && d !== 'mola') el.harita.close();
     document.body.className = document.body.className.replace(/\bd-\w+/g, '').trim() + ' d-' + d;
     Object.keys(perdeler).forEach(function (k) {
       var g = k !== d;
@@ -1177,6 +1271,7 @@
       ozetYaz(el.olduOzet, os);
     }
     if (d === 'kazandi') {
+      haritaBolumTamamla(aktifBolum());
       zaferHazirla();
       var zs = [[sureYazi(ist.sure), 'Süre'], [ist.oldurme, 'Öldürülen'], [Math.round(ist.hasar), 'Alınan hasar']];
       if (ist.enSeri >= 3) zs.push(['×' + ist.enSeri, 'En uzun seri']);
@@ -1192,6 +1287,11 @@
   /* ───────── klavye ve hikâye geçişi ───────── */
   var sonKlavye = 0;
   document.addEventListener('keydown', function (e) {
+    if (el.harita?.open) {
+      e.stopImmediatePropagation();
+      if (e.key === 'Escape') { e.preventDefault(); el.harita.close(); }
+      return;
+    }
     if (tusSecimi && e.code !== 'Tab') {
       e.preventDefault(); e.stopImmediatePropagation();
       if (e.repeat || e.metaKey || e.ctrlKey || e.altKey) return;
@@ -1278,7 +1378,7 @@
       } else secim.yazi.textContent = 'Yön tuşları hareket ve menü için ayrıldı.';
       return;
     }
-    var d = durum(), pencere = el.baslangicOnayi;
+    var d = durum(), pencere = el.harita.open ? el.harita : el.baslangicOnayi;
     if (no === 1 || no === 9 || (d === 'mola' && GIRDI.padEylemi(no) === 'esc' && no > 1 && no < 12)) {
       if (pencere.open) { pencere.close(); return; }
       var acik = (perdeler[d]?._paneller || []).find(function (panel) { return !panel.classList.contains('gizli'); });
