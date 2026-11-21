@@ -945,6 +945,13 @@
     barBg.beginFill(0x140a08, 0.9);
     barBg.drawRoundedRect(-barW * 0.5, barY, barW, barH, 3);
     barBg.endFill();
+    // Küçük kırma hedefi, kor totemini çevredeki benzer ocaklardan ayırır.
+    var isaretY = barY - 15;
+    barBg.lineStyle(2, 0x24130a, 1);
+    barBg.beginFill(0xf5cc83);
+    barBg.moveTo(-8, isaretY); barBg.lineTo(0, isaretY - 7);
+    barBg.lineTo(8, isaretY); barBg.lineTo(0, isaretY + 7); barBg.closePath();
+    barBg.endFill();
     kap.addChild(barBg);
 
     var barDolgu = new PIXI.Graphics();
@@ -1167,7 +1174,7 @@
       }
     }
 
-    // Vargor ile aktif totemler arasındaki titreşen alev kalkan bağı
+    // Aynı bağ ve kalkan çizimi daha sakin renk ve hareketle korunur.
     if (!VARGOR.bagG) return;
     var g = VARGOR.bagG;
     g.clear();
@@ -1177,12 +1184,12 @@
     var by = VARGOR.y - 125;
 
     // Vargor kor kalkanı halesi
-    var kalkanR = 84 + Math.sin(tZaman * 7) * 5 + (st.kalkanFlash > 0 ? 12 : 0);
+    var kalkanR = 84 + Math.sin(tZaman * 4) * 3 + (st.kalkanFlash > 0 ? 12 : 0);
     g.lineStyle(8, 0x000000, 0.45);
     g.drawCircle(bx, by, kalkanR);
-    g.lineStyle(3.5, 0xff7a22, 0.72);
+    g.lineStyle(3, 0xd8813d, 0.68);
     g.drawCircle(bx, by, kalkanR);
-    g.lineStyle(2, 0xffe4a8, 0.65);
+    g.lineStyle(1.5, 0xffe4a8, 0.42);
     g.drawCircle(bx, by, kalkanR - 5);
 
     for (var j = 0; j < VARGOR.totemler.length; j++) {
@@ -1202,23 +1209,15 @@
       g.moveTo(sx, sy);
       for (var k = 1; k <= adim; k++) {
         var r = k / adim;
-        var dalga = Math.sin(r * Math.PI * 3 + tZaman * 14 + tm.faz) * Math.sin(r * Math.PI) * 14;
+        var dalga = Math.sin(r * Math.PI * 3 + tZaman * 7 + tm.faz) * Math.sin(r * Math.PI) * 6;
         g.lineTo(sx + dx * r + nx * dalga, sy + dy * r + ny * dalga);
       }
-      // Kor-turuncu ışın
-      g.lineStyle(4, 0xff7a22, 0.9);
+      // Tek, ince kor bağı.
+      g.lineStyle(2.5, 0xefae61, 0.76);
       g.moveTo(sx, sy);
       for (k = 1; k <= adim; k++) {
         r = k / adim;
-        dalga = Math.sin(r * Math.PI * 3 + tZaman * 14 + tm.faz) * Math.sin(r * Math.PI) * 14;
-        g.lineTo(sx + dx * r + nx * dalga, sy + dy * r + ny * dalga);
-      }
-      // Krem-amber çekirdek
-      g.lineStyle(2, 0xffe4a8, 0.92);
-      g.moveTo(sx, sy);
-      for (k = 1; k <= adim; k++) {
-        r = k / adim;
-        dalga = Math.sin(r * Math.PI * 3 + tZaman * 14 + tm.faz) * Math.sin(r * Math.PI) * 10;
+        dalga = Math.sin(r * Math.PI * 3 + tZaman * 7 + tm.faz) * Math.sin(r * Math.PI) * 6;
         g.lineTo(sx + dx * r + nx * dalga, sy + dy * r + ny * dalga);
       }
     }

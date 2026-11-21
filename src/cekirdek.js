@@ -343,8 +343,122 @@
     try { localStorage.setItem(TUS_KAYDI, JSON.stringify(atamalar)); } catch (e) { /* Bu oturumda geçerli kalır. */ }
     OLAY.emit('tusAtamalari');
   }
+  // Tarayıcının standart Xbox düzenindeki düğme ve eksen sıralaması.
+  var PAD_ADLARI = ['A', 'B', 'X', 'Y', 'LB', 'RB', 'LT', 'RT', 'View', 'Menü', 'LS', 'RS'];
+  var PAD_VARSAYILAN = { o: 7, p: 6, g: 5, bosluk: 0, e: 3, x: 2, esc: 9, r: 8 };
+  var PAD_KAYDI = 'barbar-kontrolcu';
+  var padTuslari = Object.assign({}, PAD_VARSAYILAN);
+  var padEylemler = [], padTut = new Set(), padBasili = new Uint8Array(16);
+  var pad = { bagli: false, aktif: false, ayarlaniyor: false, ax: 0, ay: 0, hx: 0, hy: 0 };
+  var padIndeks = -1, padMerkezBekle = false, padGezinti = -1;
+  function padKodu(no) { return Number.isInteger(no) && no >= 0 && no < PAD_ADLARI.length; }
+  try {
+    var kayitliPad = JSON.parse(localStorage.getItem(PAD_KAYDI) || 'null');
+    if (kayitliPad && Object.keys(padTuslari).every(function (ad) { return padKodu(kayitliPad[ad]); }) &&
+        new Set(Object.keys(padTuslari).map(function (ad) { return kayitliPad[ad]; })).size === Object.keys(padTuslari).length) {
+      for (var ad in padTuslari) padTuslari[ad] = kayitliPad[ad];
+    }
+  } catch (e) { /* Depolama kapalı olabilir. */ }
+  function padHaritasi() {
+    padEylemler.length = 0;
+    for (var ad in padTuslari) padEylemler[padTuslari[ad]] = ad;
+  }
+  padHaritasi();
+  function padKaydet() {
+    padTut.clear();
+    padHaritasi();
+    try { localStorage.setItem(PAD_KAYDI, JSON.stringify(padTuslari)); } catch (e) { /* Oturumda kalır. */ }
+    OLAY.emit('kontrolcuAtamalari');
+  }
+  function padAktifYap(aktif) {
+    if (pad.aktif === aktif) return;
+    pad.aktif = aktif;
+    OLAY.emit('kontrolcuGiris', aktif);
+  }
+  function padCubuk(eksenler, i, alan, xAd, yAd) {
+    var x = eksenler[i] || 0, y = eksenler[i + 1] || 0, m = Math.hypot(x, y), esik = .20;
+    var k = m > esik ? (Math.min(1, m) - esik) / ((1 - esik) * m) : 0;
+    alan[xAd] = x * k; alan[yAd] = y * k;
+  }
+  var padTara = typeof navigator.getGamepads === 'function' ? navigator.getGamepads.bind(navigator) : null;
+  function padOku() {
+    if (!padTara) return;
+    var liste;
+    try { liste = padTara(); } catch (e) { padTara = null; }
+    var aygit = liste && liste[padIndeks];
+    if (!aygit?.connected || aygit.mapping !== 'standard') {
+      aygit = null;
+      if (liste) for (var i = 0; i < liste.length; i++) {
+        if (liste[i]?.connected && liste[i].mapping === 'standard') { aygit = liste[i]; break; }
+      }
+    }
+    padTut.clear(); pad.hx = pad.hy = pad.ax = pad.ay = 0;
+    if (pad.bagli !== !!aygit) {
+      pad.bagli = !!aygit;
+      if (!aygit) padAktifYap(false);
+      OLAY.emit('kontrolcuBaglanti', pad.bagli);
+    }
+    if (!aygit) { padIndeks = -1; padBasili.fill(0); padGezinti = -1; return; }
+    if (padIndeks !== aygit.index) {
+      padIndeks = aygit.index;
+      padBasili.fill(0); padGezinti = -1;
+    }
+    if (document.hidden || !document.hasFocus()) { padMerkezBekle = true; return; }
+    padCubuk(aygit.axes, 0, pad, 'hx', 'hy');
+    padCubuk(aygit.axes, 2, pad, 'ax', 'ay');
+    var d = OYUN.durum, oyunda = d === 'oyun', ayar = pad.ayarlaniyor, herhangi = false;
+    for (var i = 0; i < padBasili.length; i++) {
+      var b = aygit.buttons[i], basili = !!(b && (b.pressed || b.value > .52));
+      var yeni = basili && !padBasili[i];
+      padBasili[i] = basili ? 1 : 0;
+      if (!basili) continue;
+      herhangi = true;
+      if (padMerkezBekle) continue;
+      if (yeni) padAktifYap(true);
+      if (ayar || !oyunda) {
+        if (yeni) OLAY.emit('kontrolcuTusu', i);
+        continue;
+      }
+      var ad = padEylemler[i];
+      if (ad) {
+        padTut.add(ad);
+        if (yeni) _gelen.add(ad);
+      }
+    }
+    if (padMerkezBekle) {
+      if (!herhangi && !pad.hx && !pad.hy && !pad.ax && !pad.ay) padMerkezBekle = false;
+      pad.hx = pad.hy = pad.ax = pad.ay = 0;
+      return;
+    }
+    if (pad.hx || pad.hy || pad.ax || pad.ay) padAktifYap(true);
+    if (oyunda && !ayar) {
+      if (!pad.hx && !pad.hy) {
+        pad.hx = padBasili[15] - padBasili[14]; pad.hy = padBasili[13] - padBasili[12];
+        if (pad.hx && pad.hy) { pad.hx *= Math.SQRT1_2; pad.hy *= Math.SQRT1_2; }
+      }
+      padGezinti = -1;
+    } else {
+      var x = pad.hx, y = pad.hy, yon = -1;
+      if (Math.abs(x) > .38 || Math.abs(y) > .38) yon = Math.abs(x) > Math.abs(y) ? (x < 0 ? 14 : 15) : (y < 0 ? 12 : 13);
+      if (!ayar && yon >= 0 && yon !== padGezinti) OLAY.emit('kontrolcuTusu', yon);
+      padGezinti = yon;
+      pad.hx = pad.hy = pad.ax = pad.ay = 0;
+    }
+  }
+
   var GIRDI = window.GIRDI = {
-    hx: 0, hy: 0, saldiriKlavye: false,
+    hx: 0, hy: 0, saldiriKlavye: false, pad: pad,
+    padAdi: function (ad) { return PAD_ADLARI[padTuslari[ad]]; },
+    padEylemi: function (no) { return padEylemler[no]; },
+    padAta: function (ad, no) {
+      if (!Object.hasOwn(padTuslari, ad) || !padKodu(no)) return false;
+      var diger = padEylemler[no];
+      if (diger && diger !== ad) padTuslari[diger] = padTuslari[ad];
+      padTuslari[ad] = no;
+      padKaydet();
+      return true;
+    },
+    padSifirla: function () { padTuslari = Object.assign({}, PAD_VARSAYILAN); padKaydet(); },
     fare: { x: W / 2, y: H / 2, ex: W / 2, ey: H / 2, sol: false, sag: false, ekranda: false },
     tusEylemi: function (kod) { return tusaGore.get(kod); },
     tusAdi: function (ad) {
@@ -361,13 +475,14 @@
     },
     tuslariSifirla: function () { atamalar = Object.assign({}, VARSAYILAN_TUSLAR); tuslariKaydet(); },
     basildi: function (t) { return !_altAdim && _bu.has(t); },
-    tutuluyor: function (t) { return _tut.has(t); },
-    temizle: function () { basiliKodlar.clear(); _tut.clear(); _gelen.clear(); _bu.clear(); GIRDI.fare.sol = GIRDI.fare.sag = false; GIRDI.hx = GIRDI.hy = 0; }
+    tutuluyor: function (t) { return _tut.has(t) || padTut.has(t); },
+    temizle: function () { padTut.clear(); basiliKodlar.clear(); _tut.clear(); _gelen.clear(); _bu.clear(); GIRDI.fare.sol = GIRDI.fare.sag = false; GIRDI.hx = GIRDI.hy = 0; }
   };
   window.addEventListener('keydown', function (e) {
     if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey || e.repeat || e.target.closest?.('input, textarea, [contenteditable="true"]')) return;
     var ad = GIRDI.tusEylemi(e.code);
     if (!ad) return;
+    padAktifYap(false);
     if ((OYUN.durum === 'oyun' && !e.target.closest?.('button')) || ad === 'esc') e.preventDefault();
     if (ad === 'o' || ad === 'p') GIRDI.saldiriKlavye = true;
     basiliKodlar.set(e.code, ad); _gelen.add(ad); _tut.add(ad);
@@ -397,6 +512,7 @@
   window.addEventListener('pointerdown', function (e) {
     fareKonum(e);
     var t = e.button === 2 ? 'sag' : (e.button === 0 ? 'sol' : null); if (!t) return;
+    padAktifYap(false);
     GIRDI.saldiriKlavye = false;
     GIRDI.fare[t] = true; _tut.add(t); _gelen.add(t);
   });
@@ -410,14 +526,15 @@
     _tut.delete('sol'); _tut.delete('sag');
   });
   window.addEventListener('contextmenu', function (e) { e.preventDefault(); });
-  window.addEventListener('blur', function () { GIRDI.temizle(); GIRDI.fare.ekranda = false; });
+  window.addEventListener('blur', function () { padMerkezBekle = true; GIRDI.temizle(); GIRDI.fare.ekranda = false; });
   window.addEventListener('pagehide', function () { GIRDI.temizle(); GIRDI.fare.ekranda = false; });
   function girdiKare() {
+    padOku();
     var tmp = _bu; _bu = _gelen; _gelen = tmp; _gelen.clear();
     var hx = (_tut.has('saga') ? 1 : 0) - (_tut.has('sola') ? 1 : 0);
     var hy = (_tut.has('asagi') ? 1 : 0) - (_tut.has('yukari') ? 1 : 0);
     if (hx && hy) { hx *= Math.SQRT1_2; hy *= Math.SQRT1_2; }
-    GIRDI.hx = hx; GIRDI.hy = hy;
+    GIRDI.hx = hx || hy ? hx : pad.hx; GIRDI.hy = hx || hy ? hy : pad.hy;
     gorusGuncelle(0);   // sistemlerden önce: görüş penceresi (yumuşatmasız, yalnız kıstırma)
     fareDunya();
   }

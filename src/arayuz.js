@@ -88,8 +88,9 @@
   }
   function tus(t, genis) { return '<span class="ar-tus' + (genis ? ' genis' : '') + '">' + t + '</span>'; }
 
-  function atananTus(ad) { return tus(GIRDI.tusAdi(ad).replace(/&/g, '&amp;').replace(/</g, '&lt;'), ad === 'bosluk'); }
-  var SAVUR_TUS, BALTA_TUS, tusPanelleri = [], tusSecimi = null;
+  function etiketAdi(ad) { return (GIRDI.pad.aktif && GIRDI.padAdi(ad)) || GIRDI.tusAdi(ad); }
+  function atananTus(ad) { return tus(etiketAdi(ad).replace(/&/g, '&amp;').replace(/</g, '&lt;'), ad === 'bosluk' && !GIRDI.pad.aktif); }
+  var SAVUR_TUS, BALTA_TUS, tusPanelleri = [], baglantiYazilari = [], tusSecimi = null;
   var KONTROLLER = [
     ['yukari', 'Yukarı yürü'], ['o', 'Balta savur'],
     ['sola', 'Sola yürü'], ['p', 'Baltayı fırlat / geri çağır'],
@@ -103,56 +104,84 @@
     if (!tusSecimi) return;
     tusSecimi.dugme.removeAttribute('aria-pressed');
     tusSecimi.yazi.textContent = TUS_ATAMA_IPUCU;
+    GIRDI.pad.ayarlaniyor = false;
     tusSecimi = null;
+  }
+  function baglantiYaz() {
+    var metin = GIRDI.pad.bagli ? 'Kontrolcü bağlı' : 'Kontrolcüyü bağla ve bir düğmeye bas';
+    for (var yazi of baglantiYazilari) yazi.textContent = metin;
   }
   function kontrolPaneli(ebeveyn) {
     var p = $('div', 'ar-panel ar-acilir ar-tus-ayarlari gizli', ebeveyn);
     $('h3', '', p, 'KONTROLLER');
-    var g = $('div', 'ar-kontrol', p), dugmeler = [];
-    KONTROLLER.forEach(function (k) {
-      var b = dugme(g, '', function () {
-        if (tusSecimi && tusSecimi.dugme === b) { tusSeciminiKapat(); return; }
+    var sekmeler = $('div', 'ar-kontrol-sekmeler', p);
+    var klavye = $('div', '', p), xbox = $('div', 'gizli', p);
+    function sekme(kontrolcu) {
+      tusSeciminiKapat();
+      klavye.classList.toggle('gizli', kontrolcu);
+      xbox.classList.toggle('gizli', !kontrolcu);
+      kt.setAttribute('aria-pressed', String(!kontrolcu));
+      xt.setAttribute('aria-pressed', String(kontrolcu));
+    }
+    var kt = dugme(sekmeler, 'Klavye ve fare', function () { sekme(false); }, 'kucuk');
+    var xt = dugme(sekmeler, 'Xbox kontrolcüsü', function () { sekme(true); }, 'kucuk');
+    sekme(false);
+    function atamalar(panel, kontrolcu) {
+      if (kontrolcu) {
+        baglantiYazilari.push($('p', 'ar-pad-baglanti', panel));
+        $('p', 'ar-tus-fare', panel, 'Sol çubuk / D-pad ile yürü. Sağ çubukla nişan al. Menüde A seçer, B geri döner.');
+      }
+      var g = $('div', 'ar-kontrol', panel), dugmeler = [];
+      KONTROLLER.forEach(function (k) {
+        if (kontrolcu && !GIRDI.padAdi(k[0])) return;
+        var b = dugme(g, '', function () {
+          if (tusSecimi && tusSecimi.dugme === b) { tusSeciminiKapat(); return; }
+          tusSeciminiKapat();
+          GIRDI.temizle();
+          GIRDI.pad.ayarlaniyor = kontrolcu;
+          tusSecimi = { ad: k[0], dugme: b, yazi: durumYazisi, kontrolcu: kontrolcu };
+          b.setAttribute('aria-pressed', 'true');
+          durumYazisi.textContent = k[1] + (kontrolcu ? ' için kontrolcüde bir düğmeye bas.' : ' için yeni tuşa bas.');
+        }, 'ar-tus-atama');
+        b.dataset.eylem = k[0];
+        $('span', 'ar-tus-eylem', b).textContent = k[1];
+        var rozet = $('kbd', 'ar-tus', b);
+        dugmeler.push({ dugme: b, eylem: k[0], ad: k[1], rozet: rozet, kontrolcu: kontrolcu });
+      });
+      var alt = $('div', 'ar-tus-alt', panel);
+      var durumYazisi = $('p', '', alt, TUS_ATAMA_IPUCU);
+      durumYazisi.setAttribute('aria-live', 'polite');
+      dugme(alt, 'Varsayılanlar', function () {
         tusSeciminiKapat();
-        GIRDI.temizle();
-        tusSecimi = { ad: k[0], dugme: b, yazi: durumYazisi };
-        b.setAttribute('aria-pressed', 'true');
-        durumYazisi.textContent = k[1] + ' için yeni tuşa bas.';
-      }, 'ar-tus-atama');
-      b.dataset.eylem = k[0];
-      $('span', 'ar-tus-eylem', b).textContent = k[1];
-      var rozet = $('kbd', 'ar-tus', b);
-      dugmeler.push({ dugme: b, eylem: k[0], ad: k[1], rozet: rozet });
-    });
-    var alt = $('div', 'ar-tus-alt', p);
-    var durumYazisi = $('p', '', alt, TUS_ATAMA_IPUCU);
-    durumYazisi.setAttribute('aria-live', 'polite');
-    dugme(alt, 'Varsayılanlar', function () {
-      tusSeciminiKapat(); GIRDI.tuslariSifirla();
-      durumYazisi.textContent = 'Varsayılan tuşlar geri yüklendi.';
-    }, 'kucuk');
-    $('p', 'ar-tus-fare', p, 'Fare: nişan, sol tık savur, sağ tık balta · Shift + F: çözünürlük ve FPS');
-    tusPanelleri.push(dugmeler);
+        if (kontrolcu) GIRDI.padSifirla(); else GIRDI.tuslariSifirla();
+        durumYazisi.textContent = 'Varsayılan tuşlar geri yüklendi.';
+      }, 'kucuk');
+      if (!kontrolcu) $('p', 'ar-tus-fare', panel, 'Fare: nişan, sol tık savur, sağ tık balta · Shift + F: çözünürlük ve FPS');
+      tusPanelleri.push(dugmeler);
+    }
+    atamalar(klavye, false); atamalar(xbox, true);
+    baglantiYaz();
     return p;
   }
   function tusEtiketleriniYaz() {
-    SAVUR_TUS = fare('sol') + atananTus('o');
-    BALTA_TUS = fare('sag') + atananTus('p');
+    SAVUR_TUS = (GIRDI.pad.aktif ? '' : fare('sol')) + atananTus('o');
+    BALTA_TUS = (GIRDI.pad.aktif ? '' : fare('sag')) + atananTus('p');
     for (var grup of tusPanelleri) for (var satir of grup) {
-      var tusAdi = GIRDI.tusAdi(satir.eylem);
+      var tusAdi = satir.kontrolcu ? GIRDI.padAdi(satir.eylem) : GIRDI.tusAdi(satir.eylem);
       satir.rozet.textContent = tusAdi;
       satir.dugme.setAttribute('aria-label', satir.ad + ' · ' + tusAdi);
     }
     if (!el.savur) return;
     el.savur.querySelector('.tg-yer').innerHTML = SAVUR_TUS;
     el.balta.querySelector('.tg-yer').innerHTML = BALTA_TUS;
-    el.atil.querySelector('.tg-yer').innerHTML = GIRDI.tusAdi('bosluk') === 'Boşluk' ? IKON.bosluk : atananTus('bosluk');
+    el.atil.querySelector('.tg-yer').innerHTML = etiketAdi('bosluk') === 'Boşluk' ? IKON.bosluk : atananTus('bosluk');
     el.kasirga.querySelector('.tg-yer').innerHTML = atananTus('x');
     var ofkeTusu = el.ofke.querySelector('.q text');
-    var ofkeAdi = GIRDI.tusAdi('e');
+    var ofkeAdi = etiketAdi('e');
     ofkeTusu.textContent = ofkeAdi.length > 4 ? ofkeAdi.slice(0, 3) + '…' : ofkeAdi;
     ofkeTusu.setAttribute('font-size', ofkeAdi.length > 1 ? '8' : '18');
     el.ofke.title = 'Savaş Öfkesi · ' + ofkeAdi + ' · 100 öfke';
-    el.kasirga.title = 'Kasırga · ' + GIRDI.tusAdi('x') + ' tuşunu basılı tutarak öfke harca';
+    el.kasirga.title = 'Kasırga · ' + etiketAdi('x') + ' tuşunu basılı tutarak öfke harca';
     el.hikayeYetenek.innerHTML = ipucuMetinleri().kasirga;
     if (ipucu?.aktif) el.ipucu.innerHTML = '<span class="ic">' + ipucuMetinleri()[ipucu.aktif] + '</span>';
     zaferHazirla();
@@ -350,6 +379,7 @@
       '<div class="cubuk"><div class="govde ilk"><div class="yuva"><i class="iz"></i><i class="dolu"></i></div>' +
       '<span class="can-sayi"></span><i class="centik e2" style="left:60%"><u></u><u></u><u></u></i><i class="centik e3" style="left:30%"><u></u><u></u><u></u></i>' +
       '<span class="uc sol">' + SVG.devUc + '</span><span class="uc sag">' + SVG.devUc + '</span></div></div>');
+    el.vargorMekanik = $('div', 'ar-vargor-mekanik gizli', el.dev);
     el.devIsim = el.dev.querySelector('.ad .isim');
     el.devUnvan = el.dev.querySelector('.ad small');
     el.devCubuk = el.dev.querySelector('.cubuk');
@@ -747,7 +777,17 @@
     if (aktifBolum() === 2 && window.VARGOR && window.VARGOR.canMax) return window.VARGOR;
     return window.DEV || window.VARGOR || null;
   }
+  var vargorMekanikSon = 0;
+  function vargorMekanikYaz(metin, sure) {
+    el.vargorMekanik.textContent = metin;
+    el.vargorMekanik.classList.toggle('gizli', !metin);
+    vargorMekanikSon = sure ? OYUN.zaman.t + sure : 0;
+  }
+  function vargorTotemYaz(adet) {
+    vargorMekanikYaz('Kor totemlerini kır · ' + adet + ' kaldı');
+  }
   function devGoster(v) {
+    vargorMekanikYaz('');
     var bNo = v && v.bolum ? bolumNo(v.bolum) : aktifBolum();
     var bilgi = BOSS_BILGI[bNo] || BOSS_BILGI[1];
     aktifBossRef = (v && (v.boss || v.hedef)) || null;
@@ -775,6 +815,7 @@
   function devKir() {
     if (!devAcik) return;
     devAcik = false;
+    vargorMekanikYaz('');
     canSayisiYaz(el.devCan, { can: 0, canMax: el.devCan._max });
     el.devDolu.style.transform = el.devIz.style.transform = 'scaleX(0)';
     var ilk = el.dev.querySelector('.govde.ilk');
@@ -960,6 +1001,7 @@
       ist.ilerleme = Math.max(ist.ilerleme, B.ilerleme);
       if (il !== son.ilerleme) { el.ilerlemeDolu.style.transform = 'scaleX(' + il + ')'; el.ilerlemeUc.style.transform = 'translateX(' + (il * 396).toFixed(1) + 'px)'; son.ilerleme = il; }
     }
+    if (vargorMekanikSon && OYUN.zaman.t >= vargorMekanikSon) vargorMekanikYaz('');
     // boss (dev / Vargor)
     var D = aktifBoss();
     if (devAcik && D && D.canMax) {
@@ -1106,6 +1148,10 @@
       e.preventDefault(); e.stopImmediatePropagation();
       if (e.repeat || e.metaKey || e.ctrlKey || e.altKey) return;
       var bayrak = tusSecimi;
+      if (bayrak.kontrolcu) {
+        if (e.code === 'Escape') tusSeciminiKapat();
+        return;
+      }
       if (GIRDI.tusAta(bayrak.ad, e.code)) {
         tusSeciminiKapat();
         bayrak.yazi.textContent = 'Atandı · ' + bayrak.dugme.getAttribute('aria-label');
@@ -1174,10 +1220,55 @@
     }
   });
 
+  function kontrolcuMenuTusu(no) {
+    if (tusSecimi) {
+      if (!tusSecimi.kontrolcu) return;
+      var secim = tusSecimi;
+      if (GIRDI.padAta(secim.ad, no)) {
+        tusSeciminiKapat();
+        secim.yazi.textContent = 'Atandı · ' + secim.dugme.getAttribute('aria-label');
+      } else secim.yazi.textContent = 'Yön tuşları hareket ve menü için ayrıldı.';
+      return;
+    }
+    var d = durum(), pencere = el.baslangicOnayi;
+    if (no === 1 || no === 9 || (d === 'mola' && GIRDI.padEylemi(no) === 'esc' && no > 1 && no < 12)) {
+      if (pencere.open) { pencere.close(); return; }
+      var acik = (perdeler[d]?._paneller || []).find(function (panel) { return !panel.classList.contains('gizli'); });
+      if (acik) {
+        panelAcikYap(acik, false);
+        (acik._dugme || perdeler[d].querySelector('button')).focus();
+      } else if (d === 'mola') durumYap('oyun');
+      return;
+    }
+    var alan = pencere.open ? pencere : perdeler[d];
+    if (!alan || alan.classList.contains('gizli') || d === 'yukleniyor') return;
+    var dugmeler = Array.from(alan.querySelectorAll('button')).filter(function (b) { return !b.disabled && b.getClientRects().length; });
+    var secili = document.activeElement, i = dugmeler.indexOf(secili);
+    if (!pencere.open && GIRDI.padEylemi(no) === 'r') {
+      if (d === 'oldu') { yenidenBasla(); return; }
+      if (d === 'kazandi') { (el.zaferIkinci._eylem || el.zaferAna._eylem)?.(); return; }
+    }
+    if (no === 0) { (dugmeler[i] || dugmeler[0])?.click(); return; }
+    if (no >= 12 && no <= 15 && dugmeler.length) {
+      var sonraki = i < 0 ? 0 : (i + (no === 12 || no === 14 ? -1 : 1) + dugmeler.length) % dugmeler.length;
+      dugmeler[sonraki].focus();
+    }
+  }
+
   /* ───────── olaylar ───────── */
   function olaylariBagla() {
     var L = window.OLAY; if (!L || !L.on) return;
     L.on('tusAtamalari', tusEtiketleriniYaz);
+    L.on('kontrolcuAtamalari', tusEtiketleriniYaz);
+    L.on('kontrolcuBaglanti', function (bagli) {
+      if (!bagli && tusSecimi?.kontrolcu) tusSeciminiKapat();
+      baglantiYaz();
+    });
+    L.on('kontrolcuGiris', function (aktif) {
+      document.body.classList.toggle('kontrolcu-kullaniliyor', aktif);
+      tusEtiketleriniYaz();
+    });
+    L.on('kontrolcuTusu', kontrolcuMenuTusu);
     L.on('durum', function (v) { durumDegisti(typeof v === 'string' ? v : (v && (v.d || v.durum)) || durum()); });
     L.on('bolum', function () { hazirIzle(!!(O() && O().onYukleme)); });
     L.on('kazandi', function (v) {
@@ -1213,7 +1304,14 @@
       sahneAdiGoster(v.ad);
     });
     L.on('gormagulKayaHazir', function () { patronIpucuIste('gormagulKaya'); });
-    L.on('vargorTotemler', function () { patronIpucuIste('vargorKoz'); });
+    L.on('vargorTotemler', function (v) {
+      vargorTotemYaz(v.adet);
+      patronIpucuIste('vargorKoz');
+    });
+    L.on('totemKir', function (v) { if (v.kalan > 0) vargorTotemYaz(v.kalan); });
+    L.on('kalkanKir', function (v) {
+      if (v.boss === window.VARGOR) vargorMekanikYaz('Kalkan kırıldı · Vargor’a vur', v.sure);
+    });
     L.on('skarnSutunIsaret', function () { patronIpucuIste('ayazSkarn'); });
     L.on('skarnAcik', function () { ipucuYapildi('ayazSkarn'); });
     L.on('ayazBuzCatlak', function () { patronIpucuIste('ayazBuz'); });

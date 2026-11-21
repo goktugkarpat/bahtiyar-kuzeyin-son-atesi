@@ -2107,12 +2107,21 @@
     var kap = new PIXI.Container(); kap.x = Math.round(p.x); kap.y = Math.round(p.y);
     if (!canSisesiGorseli) {
       var cizim = ytDekor('can_sisesi');
-      canSisesiGorseli = { tex: PIXI.Texture.from(cizim.c), ax: cizim.ax, ay: cizim.ay, olcek: BOY.can_sisesi / cizim.sh };
+      var tc = tuval(80, 40), g = tc.getContext('2d');
+      g.translate(40, 20); g.scale(1, .5);
+      var kor = g.createRadialGradient(0, 0, 1, 0, 0, 39);
+      kor.addColorStop(0, 'rgba(255,169,126,.69)');
+      kor.addColorStop(.37, 'rgba(219,90,70,.48)');
+      kor.addColorStop(1, 'rgba(146,35,36,0)');
+      g.fillStyle = kor; g.fillRect(-40, -40, 80, 80);
+      canSisesiGorseli = { tex: PIXI.Texture.from(cizim.c), kor: PIXI.Texture.from(tc), ax: cizim.ax, ay: cizim.ay, olcek: BOY.can_sisesi / cizim.sh };
     }
     var dk = canSisesiGorseli, sp = new PIXI.Sprite(dk.tex);
     sp.anchor.set(dk.ax, dk.ay); sp.scale.set(dk.olcek);
-    kap.addChild(sp); OYUN.katman.varlik.addChild(kap);
-    return { x: kap.x, y: kap.y, s: kap, sp: sp, alindi: false, t: Math.random() * 6 };
+    var kor = new PIXI.Sprite(dk.kor);
+    kor.anchor.set(.5); kor.alpha = .76; kor.y = -3;
+    kap.addChild(kor, sp); OYUN.katman.varlik.addChild(kap);
+    return { x: kap.x, y: kap.y, s: kap, sp: sp, kor: kor, alindi: false, t: Math.random() * 6 };
   }
   function canNoktasi(x, y, olum) {
     var s = BOLUM.sinir, pay = 16;
@@ -2153,6 +2162,7 @@
     for (var i = 0; i < canlar.length; i++) {
       var c = canlar[i]; if (c.alindi) continue;
       c.t += dt; c.sp.y = -4 - Math.abs(Math.sin(c.t * 3)) * 8;
+      c.kor.alpha = .75 + .18 * Math.sin(c.t * 3);
       c.s.visible = c.y > gorusUst() - 100 && c.y < gorusAlt() + 100;
       if (O && O.canli !== false && Math.abs(O.x - c.x) < 46 && Math.abs(O.y - c.y) < 46 && (O.can === undefined || O.can < (O.canMax || 100))) {
         c.alindi = true; c.s.visible = false;

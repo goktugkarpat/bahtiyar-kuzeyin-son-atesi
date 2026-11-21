@@ -181,10 +181,13 @@
     var hx = G.hx || 0, hy = G.hy || 0;
     var savurTus = bas('o'), baltaTus = bas('p'), savurBasili = G.tutuluyor && G.tutuluyor('o');
     var fareBas = bas('sol'), fareBalta = bas('sag');
-    var klavyeNisan = savurTus || baltaTus || (G.saldiriKlavye && !fareBas && !fareBalta && !f.sol);
-    var aci = klavyeNisan && (hx || hy) ? Math.atan2(hy, hx) : P.aci;
+    var padNisan = G.pad.aktif && !fareBas && !fareBalta && !f.sol;
+    var cubukNisan = padNisan && !!(G.pad.ax || G.pad.ay);
+    var klavyeNisan = padNisan || savurTus || baltaTus || (G.saldiriKlavye && !fareBas && !fareBalta && !f.sol);
+    var aci = cubukNisan ? Math.atan2(G.pad.ay, G.pad.ax)
+      : klavyeNisan && (hx || hy) ? Math.atan2(hy, hx) : P.aci;
     return {
-      hx: hx, hy: hy, klavyeNisan: klavyeNisan,
+      hx: hx, hy: hy, klavyeNisan: klavyeNisan, cubukNisan: cubukNisan,
       nx: !klavyeNisan && isFinite(f.x) ? f.x : P.x + Math.cos(aci) * 100,
       ny: !klavyeNisan && isFinite(f.y) ? f.y : P.y - AYAR.nisanYuksek + Math.sin(aci) * 100,
       savurBas: fareBas || savurTus, savurTut: !!f.sol || savurBasili, agirBas: bas('g'),
@@ -1399,6 +1402,7 @@
       }
       // atılma/fırlatma/sersem pozunun kuyruğunda gövde dönmez (poz yön değiştirip sıçramasın)
       if (kilitli) P.aci = hareketli ? Math.atan2(hy, hx) : P.aci;
+      else if (g.cubukNisan) { S.aimKurtar = false; yonYumusak(nisan, dt); }
       else if (hareketli) { S.aimKurtar = false; yonYumusak(Math.atan2(hy, hx), dt); }
       else if (S.nisanTaze && nm > AYAR.nisanYakin) {
         if (S.aimKurtar) { S.hedefYon = aciYon(nisan); S.aimKurtar = false; }
