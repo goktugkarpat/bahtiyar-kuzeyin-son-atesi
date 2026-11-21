@@ -19,10 +19,10 @@
     vurusYukseklik: 40,    // vuruş noktası yerden kaç px yukarıda sayılır
     vinyet: 0,             // ekran kenarı karartması (3. tur: kapalı; ışık haritasındaki çok hafif kenar yeterli)
     ton: 0xc9d2d4,         // (eski) tek renk ton; artık ışık haritası kullanılıyor
-    ortam: 0x828d96,      // Yanık Köy: sağanak altındaki ıslak taş.
-    ortamDev: 0x88949f,
-    ortamVolkan: 0x94837c, // Kül Geçidi: kuru sıcak bazalt ve kömür.
-    ortamVolkanDev: 0x998981,
+    ortam: 0x788794,      // Yanık Köy: sağanak altındaki ıslak taş.
+    ortamDev: 0x7b8796,
+    ortamVolkan: 0x897b81, // Kül Geçidi: kuru sıcak bazalt ve kömür.
+    ortamVolkanDev: 0x87777e,
     ortamAyaz: 0x8b969f,  // Ayaz Hisarı: kardan seken mavi ışık.
     ortamAyazDev: 0x919da7,
     isikIki: true,        // 2× çarpma (false: eski düz çarpma)
@@ -31,7 +31,7 @@
     haritaVinyet: 0.055,
     haritaVinyetVolkan: 0.095,
     volkanVinyet: 0.105,
-    volkanAltIsik: 0.075,
+    volkanAltIsik: 0.030,
     haritaOlcek: 2,        // ışık haritası çözünürlük bölücüsü (1280×720 → 640×360; 4'te küçük ışıklar kaba lekeydi)
     kahramanIsik: 0.12,    // barbarın çevresindeki çok hafif sıcak ışık havuzu (zemin; ışıl ışıl olmasın)
     kahramanYaricap: 120,  // px
@@ -1518,9 +1518,11 @@
   var IH = null;   // {rt, kok, dunya, ortam, vinyet, kahraman, ates:[], flas:[], anlik:[], anlikN}
   // Her bölümün geniş çevre ışığı ve ateşe yakın yerel renkleri; aynı ışık haritasında çizilir.
   var ISIK_PALET = [
-    { gok: 0xc2dff2, guc: .114, x: .15, y: .12, en: 1.62, boy: 1.88, mesale: 0xffa35e, enkaz: 0xff682b, ates: 0xff803e },
-    { gok: 0xeb894e, guc: .071, x: .73, y: .93, en: 1.72, boy: 1.52, mesale: 0xff8d47, enkaz: 0xff5721, ates: 0xff6c2d },
-    { gok: 0xcadfff, guc: .098, x: .19, y: .10, en: 2.08, boy: 2.34, mesale: 0xffb36b, enkaz: 0xff833d, ates: 0xff9950 }
+    // Yanık Köy: sağanakta mavi gökyüzü ve ıslak taşta kehribar ateş.
+    { gok: 0x70bcff, guc: .255, x: .18, y: .09, en: 1.83, boy: 1.95, mesale: 0xffb565, enkaz: 0xff8b4d, ates: 0xff944b, mesaleGuc: 1.62, atesGuc: 1.57 },
+    // Kül Geçidi: koyu bazalt üzerinde bakır renkli ocak ışığı.
+    { gok: 0xe98143, guc: .125, x: .69, y: .91, en: 1.67, boy: 1.43, mesale: 0xff9a45, enkaz: 0xff6327, ates: 0xff702c, mesaleGuc: 1.57, atesGuc: 1.40 },
+    { gok: 0xcadfff, guc: .098, x: .19, y: .10, en: 2.08, boy: 2.34, mesale: 0xffb36b, enkaz: 0xff833d, ates: 0xff9950, mesaleGuc: 1.12, atesGuc: .95 }
   ];
   // TAM EKRAN: görünen alanın tamamı (mantıksal ekran koordinatı; 1280×720 ortada, x0/y0 ≤ 0). cekirdek.js OYUN.gorunum.
   function gor() { return OYUN.gorunum || { x0: 0, y0: 0, w: OYUN.W || 1280, h: OYUN.H || 720 }; }
@@ -1601,9 +1603,9 @@
       if (!gorunur) continue;
       s.x = i ? (lav.sag + OYUN.W) * .5 : lav.sol * .5;
       s.y = (lav.y1 + lav.y2) * .5;
-      s.scale.set(8.8, 5.1);
-      s.tint = 0xff793c;
-      s.alpha = (iki ? .156 : .105) * (.91 + .058 * Math.sin(gT * 1.3 + i) + .032 * Math.sin(gT * 3.1));
+      s.scale.set(9.25, 6.8);
+      s.tint = 0xffa33e;
+      s.alpha = (iki ? .265 : .176) * (.91 + .058 * Math.sin(gT * 1.3 + i) + .032 * Math.sin(gT * 3.1));
     }
   }
   function haritaGuncelle(gd) {
@@ -1653,7 +1655,7 @@
       s.visible = true;
       s.position.set(f.agizX ?? f.x, f.y + (agizY - f.y) * .40);
       s.tint = mesale ? palet.mesale : enkaz ? palet.enkaz : palet.ates;
-      s.alpha = iki ? AYAR.atesGuc * (mesale ? 1.12 : .95) * tit : Math.min(1, (mesale ? .85 : .75) * tit);
+      s.alpha = iki ? AYAR.atesGuc * (mesale ? palet.mesaleGuc : palet.atesGuc) * tit : Math.min(1, (mesale ? .85 : .75) * tit);
       var boy = yaricap * (iki ? 1.1 : 1) / 64 * (.98 + .03 * tit);
       s.scale.set(boy * (mesale ? .86 : 1.07), boy * (soguk ? .69 : .80));
     }
@@ -1983,8 +1985,8 @@
       var s = yansimalar[n++], mesale = f.tur === 'mesale';
       s.visible = true;
       s.position.set(f.agizX ?? f.x, f.y + 6);
-      s.scale.set(mesale ? .69 : 1.15, mesale ? .88 : .76);
-      s.alpha = (mesale ? .33 : .21) * atesTitresim(i, f.tur) * (.92 + .08 * Math.sin(gT * 3 + i));
+      s.scale.set(mesale ? .78 : 1.21, mesale ? 1.05 : .90);
+      s.alpha = (mesale ? .52 : .34) * atesTitresim(i, f.tur) * (.92 + .08 * Math.sin(gT * 3 + i));
     }
     for (; n < yansimalar.length; n++) yansimalar[n].visible = false;
   }

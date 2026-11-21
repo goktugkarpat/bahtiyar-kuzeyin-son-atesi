@@ -8,6 +8,7 @@
   var DEKOR_HAVUZ = 48, dekorGolge = [], dekorKap = null;
   var dekorIzleri = [], canliIzleri = [];
   var ISIK_HAVUZ = 24, bounceIsik = [], bounceKap = null, isikDoku = null;
+  var kuleZeminIsigi, ayazYansimalari = [];
   var devOrtamGolge = null, vargorOrtamGolge = null, devOrtamDoku = null;
   var zaman = 0, vargorAlfa = 1;
   var _ozelSpr = [];
@@ -175,6 +176,17 @@
       bs.anchor.set(0.5); bs.visible = false; bs.blendMode = addMode;
       bounceKap.addChild(bs); bounceIsik.push(bs);
     }
+    var lamba = document.createElement('canvas'); lamba.width = lamba.height = 128;
+    var fg = lamba.getContext('2d'), sicak = fg.createRadialGradient(64, 64, 2, 64, 64, 63);
+    sicak.addColorStop(0, 'rgba(255,162,83,.94)');
+    sicak.addColorStop(.34, 'rgba(241,111,46,.70)');
+    sicak.addColorStop(.72, 'rgba(199,67,24,.24)');
+    sicak.addColorStop(1, 'rgba(207,77,31,0)');
+    fg.fillStyle = sicak; fg.fillRect(0, 0, 128, 128);
+    kuleZeminIsigi = new PIXI.Sprite(PIXI.Texture.from(lamba));
+    kuleZeminIsigi.name = 'ayaz_kule_zemin_isigi';
+    kuleZeminIsigi.anchor.set(.5); kuleZeminIsigi.visible = false;
+    bounceKap.addChild(kuleZeminIsigi);
     dekorKap = new PIXI.Container();
     kap = new PIXI.Container();
     OYUN.katman.golge.addChild(dekorKap);   // yapı/ağaç/kaya temas gölgeleri: karakter gölgelerinin ALTINDA
@@ -203,6 +215,10 @@
       return;
     }
     var V = gorD(), ky = V.y, Hh = V.h, n = 0;   // görünen dünya (yakınlık + görüş kayması; tam ekran şeritleri dahil)
+    var ayaz = OYUN.bolum === 3, volkan = OYUN.bolum === 2;
+    // Aynı ışık havuzu: köyde ıslak taş genişçe yansıtır, ocakta ışık zemine daha yakın kalır.
+    var en = ayaz ? 1 : volkan ? 1.98 : 2.20, boy = ayaz ? .46 : volkan ? .98 : .87;
+    var guc = ayaz ? 1 : volkan ? 3.50 : 4.20, tavan = ayaz ? .22 : volkan ? .44 : .53;
     for (var i = 0; i < at.length && n < ISIK_HAVUZ; i++) {
       var f = at[i];
       if (!f || f.y < ky - 220 || f.y > ky + Hh + 220 || f.x < V.x - 260 || f.x > V.x + V.w + 260) continue;
@@ -211,14 +227,53 @@
       var g = (f.guc || 1) * tit;
       var cap = (150 + (f.h || 30) * 1.8) * Math.sqrt(Math.max(0.4, f.guc || 1));
       s.visible = true;
-      s.x = f.x;
+      s.x = ayaz ? f.x : f.agizX ?? f.x;
       s.y = f.y + 6;
-      s.width = cap * tit;
-      s.height = cap * 0.46 * tit;
-      s.tint = f.tur === 'mesale' ? 0xff9442 : 0xff7629;
-      s.alpha = Math.min(0.22, AYAR.mesaleSekme * g);
+      s.width = cap * en * tit;
+      s.height = cap * boy * tit;
+      s.tint = ayaz ? (f.tur === 'mesale' ? 0xff9442 : 0xff7629) : (volkan ? 0xffad78 : 0xffdfb1);
+      s.alpha = Math.min(tavan, AYAR.mesaleSekme * g * guc);
     }
     for (; n < ISIK_HAVUZ; n++) bounceIsik[n].visible = false;
+  }
+  function ayazKarakterIsigi(indeks, actor, lamba) {
+    var katman = actor && actor.sprite, taban = katman && katman.g;
+    var yansima = ayazYansimalari[indeks];
+    var alan = actor && (1 - yumusak(245, actor.y - 620));
+    if (!lamba || !alan || !taban || !taban.visible || katman.yerTutucu || !taban.parent || actor.canli === false) {
+      if (yansima && !yansima.destroyed) yansima.visible = false;
+      return;
+    }
+    if (!yansima || yansima.destroyed) {
+      yansima = ayazYansimalari[indeks] = new PIXI.Sprite();
+      yansima.name = 'ayaz_karakter_isigi';
+      yansima.blendMode = PIXI.BLEND_MODES.ADD;
+    }
+    if (yansima.parent !== taban.parent) taban.parent.addChildAt(yansima, taban.parent.getChildIndex(taban) + 1);
+    // Aynı sprite karesinin silueti içinde kalır; zemin veya HUD aydınlanmaz.
+    if (yansima.texture !== taban.texture) yansima.texture = taban.texture;
+    yansima.position.copyFrom(taban.position); yansima.scale.copyFrom(taban.scale);
+    yansima.anchor.copyFrom(taban.anchor); yansima.rotation = taban.rotation;
+    var uzaklik = Math.hypot(actor.x - (lamba.x - 45), (actor.y - lamba.y + 42) * 1.32);
+    var ates = (1 - yumusak(550, uzaklik)) * Math.min(1, lamba.guc / 1.55);
+    var ay = .255 * (1 - .82 * ates);
+    var kor = .57 * ates * (1 + .035 * Math.sin(zaman * 9));
+    var guc = ay + kor, oran = kor / guc;
+    var r = Math.round(89 + 166 * oran), g = Math.round(156 - 12 * oran), b = Math.round(255 - 193 * oran);
+    yansima.tint = (r << 16) | (g << 8) | b;
+    yansima.alpha = guc * alan * taban.alpha;
+    yansima.visible = true;
+  }
+  function ayazArenaIsigi(V) {
+    var lamba = OYUN.bolum === 3 && V.y < 850 && window.AYAZ && AYAZ.kuleIsigi();
+    kuleZeminIsigi.visible = !!lamba;
+    if (lamba) {
+      kuleZeminIsigi.position.set(lamba.x - 119, lamba.y - 55);
+      kuleZeminIsigi.width = 740; kuleZeminIsigi.height = 510;
+      kuleZeminIsigi.alpha = .76 * Math.min(1, lamba.guc / 1.55);
+    }
+    ayazKarakterIsigi(0, window.OYUNCU, lamba);
+    ayazKarakterIsigi(1, window.SKARN, lamba);
   }
   function koy(n, x, y, gen, alfa, yon) {
     var s = golgeler[n]; if (!s) return;
@@ -286,6 +341,7 @@
     zaman += dt;
     var V = gorD(), yon = GOLGE_YON[OYUN.bolum - 1] || GOLGE_YON[0];
     try { mesaleSekmeleri(); } catch (e) {}
+    ayazArenaIsigi(V);
     dekorGolgeleri(V, yon);
     var n = 0, iz = 0, i, d, L;
     var oy = window.OYUNCU && OYUNCU.canli !== false && typeof OYUNCU.x === 'number';
@@ -392,6 +448,8 @@
     if (devOrtamGolge) devOrtamGolge.visible = false;
     if (vargorOrtamGolge) vargorOrtamGolge.visible = false;
     if (temas) temas.visible = false;
+    if (kuleZeminIsigi) kuleZeminIsigi.visible = false;
+    for (var isik of ayazYansimalari) if (isik && !isik.destroyed) { isik.visible = false; isik.parent?.removeChild(isik); }
     try { if (window.DEV && DEV.sprite) DEV.sprite.alpha = 1; } catch (e) {}
     try { if (window.VARGOR) { var vg = VARGOR.kap || VARGOR.sprite; if (vg) vg.alpha = 1; } } catch (e) {}
   } });

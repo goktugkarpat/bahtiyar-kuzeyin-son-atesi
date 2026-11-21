@@ -336,9 +336,22 @@
       g.fillStyle = avlu; g.fillRect(0,0,W,h);
     }
     if (y0 < 850) {
-      var gl = g.createRadialGradient(KULE_X, KULE_Y - y0, 6, KULE_X, KULE_Y - y0, 435);
-      gl.addColorStop(0, 'rgba(254,157,78,.42)'); gl.addColorStop(.49, 'rgba(220,99,40,.17)');
-      gl.addColorStop(1, 'rgba(220,99,40,0)'); g.fillStyle = gl; g.fillRect(0, 0, W, h);
+      // Kuleye kadar uzanan koyu geçiş, ayın vurduğu taşları belirginleştirir.
+      var gece = g.createLinearGradient(260, 0, 930, 0);
+      gece.addColorStop(0, 'rgba(13,22,40,.08)');
+      gece.addColorStop(.59, 'rgba(13,22,40,.32)');
+      gece.addColorStop(1, 'rgba(13,22,40,.20)');
+      g.fillStyle = gece; g.fillRect(0, 0, W, h);
+      g.save();
+      g.translate(330, 207 - y0); g.rotate(.24); g.scale(1, .82);
+      var ay = g.createRadialGradient(0, 0, 0, 0, 0, 540);
+      ay.addColorStop(0, 'rgba(154,200,239,.49)');
+      ay.addColorStop(.38, 'rgba(118,175,223,.35)');
+      ay.addColorStop(.72, 'rgba(76,129,194,.16)');
+      ay.addColorStop(1, 'rgba(76,129,194,0)');
+      g.globalCompositeOperation = 'screen';
+      g.fillStyle = ay; g.fillRect(-540, -540, 1080, 1080);
+      g.restore();
     }
   }
   function surZemin(g, y0, h) {
@@ -1020,6 +1033,7 @@
     OLAY.emit('ayazBolge', { ad: 'Tutsaklar kurtarıldı' });
   });
   window.AYAZ = {
+    kuleIsigi: function () { return kuleAlev; },
     kurtarildi: function () { return kurtarildi; }, yolX: yolX, yolYari: yolYari, bolge: bolge, stilKare: stilKare, zeminAdimlari: zeminAdimlari, dekorDoku: dekorDoku, yerlesim: yerlesim, kapiKur:kapiKur, kapiVur:kapiVur, kapiHedef:kapiHedef };
   OYUN.sistem('ayaz_cevre', { baslat: buzSifirla, sifirla: buzSifirla, guncelle: buzGuncelle,
     herKare: function (dt) {
