@@ -1901,26 +1901,12 @@
       g.strokeStyle = 'rgba(194,217,228,.39)';
       g.beginPath(); g.ellipse(w / 2, h / 2, w * .31, h * .22, -.07, 2.1, 5.6); g.stroke();
     });
-    var yansi = tuval(88, 112, function (g, w, h) {
-      var gr = g.createLinearGradient(0, 0, 0, h);
-      gr.addColorStop(0, 'rgba(255,255,255,0)');
-      gr.addColorStop(.23, 'rgba(255,255,255,.59)');
-      gr.addColorStop(.62, 'rgba(255,255,255,.37)');
-      gr.addColorStop(1, 'rgba(255,255,255,0)');
-      g.fillStyle = gr;
-      for (var j = 0; j < 21; j++) {
-        var u = j / 20, en = (11 + 40 * u) * (.43 + .57 * Math.pow(Math.sin(j * 2.6), 2));
-        var x = w * .5 + Math.sin(j * 1.8) * (2 + 7 * u);
-        g.fillRect(x - en / 2, 7 + u * (h - 8), en, j % 3 ? 1.5 : 2.1);
-      }
-    });
     var perde = new PIXI.ParticleContainer(YAGMUR_DAMLA, { position: true, rotation: true, alpha: true });
     var zemin = new PIXI.ParticleContainer(YAGMUR_HALKA, { position: true, vertices: true, alpha: true });
     perde.name = 'yanik_koy_yagmur'; zemin.name = 'yanik_koy_dalgalari';
     OYUN.katman.ust.addChildAt(perde, 0);
     OYUN.katman.leke.addChildAt(zemin, 0);
-    var yansima = kap('islak_yansima', OYUN.katman.leke);
-    yagmur = { perde: perde, zemin: zemin, yansima: yansima, damlalar: [], halkalar: [] };
+    yagmur = { perde: perde, zemin: zemin, damlalar: [], halkalar: [] };
     var i, s;
     for (i = 0; i < YAGMUR_DAMLA; i++) {
       var d = Math.random();
@@ -1934,23 +1920,14 @@
       zemin.addChild(s);
       yagmur.halkalar.push({ s: s, yas: r(.35, .7), boy: r(.55, 1), sure: r(.26, .49) });
     }
-    for (i = 0; i < 10; i++) {
-      s = new PIXI.Sprite(yansi);
-      s.anchor.set(.5, 0);
-      s.blendMode = PIXI.BLEND_MODES.ADD;
-      s.tint = 0xf7ad68;
-      s.visible = false;
-      yansima.addChild(s);
-    }
   }
   function yagmurGuncelle(gd) {
     if (bolumNo !== 1 || OYUN.durum === 'baslik' || OYUN.durum === 'yukleniyor') {
-      if (yagmur) yagmur.perde.visible = yagmur.zemin.visible = yagmur.yansima.visible = false;
+      if (yagmur) yagmur.perde.visible = yagmur.zemin.visible = false;
       return;
     }
     if (!yagmur) yagmurKur();
     yagmur.perde.visible = yagmur.zemin.visible = true;
-    yagmur.yansima.visible = true;
     var havaKalitesi = OYUN.grafik.atmosfer === 2 ? 2.55 : OYUN.grafik.atmosfer * 2;
     var dt = Math.min(gd, .055);
     if (OYUN.durum === 'mola') dt = 0;
@@ -1981,23 +1958,6 @@
       d.s.alpha = (.37 + havaKalitesi * .03) * Math.min(1, p * 7) * (1 - p) * (1 - p);
       d.s.scale.set(d.boy * (.17 + p * .7));
     }
-    yagmurYansimalari(gorunen);
-  }
-  function yagmurYansimalari(V) {
-    var isiklar = window.BOLUM && BOLUM.atesler;
-    var yansimalar = yagmur.yansima.children;
-    var n = 0;
-    if (isiklar) for (var i = 0; i < isiklar.length && n < yansimalar.length; i++) {
-      var f = isiklar[i];
-      if (!f || f.y < V.y - 125 || f.y > V.y + V.h + 45 || f.x < V.x - 90 || f.x > V.x + V.w + 90) continue;
-      var s = yansimalar[n++], mesale = f.tur === 'mesale';
-      s.visible = true;
-      s.position.set(f.agizX ?? f.x, f.y + 6);
-      var ust = OYUN.grafik.isik === 2;
-      s.scale.set(mesale ? (ust ? 1.18 : .78) : 1.21, mesale ? (ust ? 1.58 : 1.05) : .90);
-      s.alpha = (mesale ? .52 : .34) * (1 + (ust ? .68 : .28 * OYUN.grafik.isik)) * atesTitresim(i, f.tur) * (.92 + .08 * Math.sin(gT * 3 + i));
-    }
-    for (; n < yansimalar.length; n++) yansimalar[n].visible = false;
   }
   var sisler = [];
   function sisKur() {
