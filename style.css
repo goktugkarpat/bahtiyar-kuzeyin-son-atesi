@@ -189,7 +189,7 @@ body.d-oyun, body.d-oyun #sahne, body.d-oyun canvas {
 }
 .ar-baslik-ust { margin-top: 50px; display: flex; flex-direction: column; align-items: center; position: relative; z-index: 1; }
 .ar-perde.baslik .ar-menu { position: absolute; left: 0; right: 0; bottom: 52px; z-index: 1; }
-.ar-perde.baslik .ar-dugme.ana { margin: 4px auto 6px; animation: ar-yuksel .7s cubic-bezier(.2,.8,.3,1) .55s both; }
+.ar-perde.baslik .ar-dugme.ana { width: 264px; min-width: 0; padding: 11px 16px 10px; font-size: 23px; margin: 4px auto 6px; animation: ar-yuksel .7s cubic-bezier(.2,.8,.3,1) .55s both; }
 .ar-menu-yan { display: flex; gap: 14px; justify-content: center; animation: ar-yuksel .7s cubic-bezier(.2,.8,.3,1) .7s both; }
 .ar-menu-yan .ar-dugme { margin: 4px 0; }
 @keyframes ar-yuksel { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
@@ -902,7 +902,9 @@ body.d-mola .ar-uyari, body.d-mola .ar-ipucu, body.d-mola .ar-hikaye, body.d-mol
   box-shadow: 0 16px 60px #000c, inset 0 0 0 4px #231913;
   overflow: auto; pointer-events: auto;
 }
-.ar-harita::backdrop { background: #0a0807db; }
+.ar-harita::backdrop { background: radial-gradient(ellipse at center, rgba(14,11,10,.37), rgba(6,5,5,.76)); }
+body:has(.ar-harita[open]) .ar-perde.mola { background: none; }
+body:has(.ar-harita[open]) .ar-mola-kart { opacity: 0; }
 .ar-harita-ust { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 1px 1px 14px; }
 .ar-harita-ust-yazi, .ar-harita-durum { color: #e8aa77; font-weight: bold; letter-spacing: .14em; font-size: 12px; text-transform: uppercase; }
 .ar-harita-ust h2 { font-size: clamp(24px, 3vw, 42px); margin: 4px 0 0; font-weight: normal; text-shadow: 0 2px 2px #130d0a; }

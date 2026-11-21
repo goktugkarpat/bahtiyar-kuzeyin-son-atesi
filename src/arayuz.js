@@ -96,7 +96,7 @@
     ['sola', 'Sola yürü'], ['p', 'Baltayı fırlat / geri çağır · II. bölüm'],
     ['asagi', 'Aşağı yürü'], ['g', 'Ağır vuruş · II. bölüm'],
     ['saga', 'Sağa yürü'], ['bosluk', 'Atıl'],
-    ['esc', 'Molayı aç / kapat'], ['e', 'Savaş Öfkesi · III. bölüm'],
+    ['esc', 'Molayı aç / kapat'], ['e', 'Savaş Öfkesi'],
     ['r', 'Yeniden oyna'], ['x', 'Kasırga · III. bölüm (basılı tut)']
   ];
   var TUS_ATAMA_IPUCU = 'Bir eyleme tıkla, ardından yeni tuşa bas.';
@@ -437,10 +437,12 @@
     el.baslaHata.setAttribute('role', 'alert');
     hazirIzle();
     var mk = $('div', 'ar-menu-yan', m);
-    dugme(mk, 'KONTROLLER', function () { acKapa(bKontrol, [bSes, bGrafik]); }, 'kucuk');
-    dugme(mk, 'SES', function () { acKapa(bSes, [bKontrol, bGrafik]); }, 'kucuk');
+    var bKontrolDugme = dugme(mk, 'KONTROLLER', function () { acKapa(bKontrol, [bSes, bGrafik]); }, 'kucuk');
+    var bSesDugme = dugme(mk, 'SES', function () { acKapa(bSes, [bKontrol, bGrafik]); }, 'kucuk');
     var bGrafikDugme = dugme(mk, 'GRAFİK', function () { acKapa(bGrafik, [bKontrol, bSes]); }, 'kucuk');
     bKontrol = kontrolPaneli(b); bSes = sesPaneli(b); bGrafik = grafikPaneli(b);
+    panelDugmesi(bKontrol, bKontrolDugme, 'ar-baslik-kontrol');
+    panelDugmesi(bSes, bSesDugme, 'ar-baslik-ses');
     panelDugmesi(bGrafik, bGrafikDugme, 'ar-baslik-grafik');
     perdeler.baslik._paneller = [bKontrol, bSes, bGrafik];
     $('div', 'ar-ipucu-alt', b, 'Başlamak için ' + tus('Enter', true));
@@ -539,7 +541,7 @@
     bolumGec(1);
   }
 
-  // Resimler ekran kartına yüklenmeden oyun başlamaz (yoksa ilk 2–3 sn takılır): düğme o zamana kadar 'HAZIRLANIYOR' gösterir;
+  // Resimler ekran kartına yüklenmeden oyun başlamaz (yoksa ilk 2–3 sn takılır): düğme o zamana kadar 'YÜKLENİYOR' gösterir;
   // erken basılırsa yükleme bitince kendiliğinden başlar.
   var bBasla = null, baslaBekliyor = false, hazirZ = 0, hazirSay = 0;
   function hazirMi() {
@@ -549,7 +551,7 @@
   function hazirGuncelle() {
     var y = O() && O().onYukleme, h = hazirMi();
     if (bBasla) {
-      var yz = h ? 'BAŞLA' : 'HAZIRLANIYOR  %' + (y && y.toplam ? Math.round(y.biten / y.toplam * 100) : 0);
+      var yz = h ? 'BAŞLA' : 'YÜKLENİYOR  %' + (y && y.toplam ? Math.round(y.biten / y.toplam * 100) : 0);
       if (bBasla.textContent !== yz) bBasla.textContent = yz;
       bBasla.classList.toggle('bekle', !h);
     }
@@ -665,7 +667,7 @@
     });
     el.haritaYol.forEach(function (p, i) { p.classList.toggle('kilitli', i >= haritaTamamlanan); });
     var kilitli = haritaSecili > sonDurak;
-    var gorsel = 'ekran/' + HARITA_DURAK[haritaSecili - 1].goruntu + '.jpg';
+    var gorsel = 'ekran/hikaye-' + HARITA_DURAK[haritaSecili - 1].goruntu + '.webp';
     if (el.haritaGorsel.getAttribute('src') !== gorsel) el.haritaGorsel.src = gorsel;
     el.haritaKart.classList.toggle('kilitli', kilitli);
     el.haritaDurum.textContent = kilitli ? 'Kilitli' : haritaSecili <= haritaTamamlanan ? 'Tamamlandı' : 'Açık';
@@ -682,7 +684,7 @@
   }
 
   function hikayeYetenekYaz(no) {
-    var acilis = no === 2 ? ipucuMetinleri().baltaAcildi : no === 3 ? ipucuMetinleri().ofkeAcildi : '';
+    var acilis = no === 2 ? ipucuMetinleri().baltaAcildi : no === 3 ? ipucuMetinleri().kasirga : '';
     el.hikayeYetenek.innerHTML = acilis;
     el.hikayeYetenek.classList.toggle('gizli', !acilis);
   }
@@ -812,7 +814,6 @@
     ok: SAVUR_TUS + ' savurarak okları geri gönder',
     kalkan: 'Kalkanlıyı yandan vur',
     baltaAcildi: 'Balta Atışı açıldı · ' + BALTA_TUS + ' ile fırlat ve geri çağır',
-    ofkeAcildi: 'Kasırga ve Savaş Öfkesi açıldı · ' + atananTus('x') + ' basılı tut · ' + atananTus('e') + ' tam öfke',
     cagir: BALTA_TUS + ' baltayı geri çağır — dönüşte yolundakileri biçer',
     ofke: 'Savaş Öfkesi hazır · ' + atananTus('e'),
     kasirga: 'Kasırga açıldı · ' + atananTus('x') + ' tuşunu basılı tut ve hareket et',
@@ -1296,10 +1297,8 @@
       e.preventDefault(); e.stopImmediatePropagation();
       if (e.repeat || e.metaKey || e.ctrlKey || e.altKey) return;
       var bayrak = tusSecimi;
-      if (bayrak.kontrolcu) {
-        if (e.code === 'Escape') tusSeciminiKapat();
-        return;
-      }
+      if (e.code === 'Escape') { tusSeciminiKapat(); return; }
+      if (bayrak.kontrolcu) return;
       if (GIRDI.tusAta(bayrak.ad, e.code)) {
         tusSeciminiKapat();
         bayrak.yazi.textContent = 'Atandı · ' + bayrak.dugme.getAttribute('aria-label');
@@ -1310,6 +1309,9 @@
       e.preventDefault();
       e.stopPropagation();
       el.baslangicOnayi.close();
+    } else if (e.key === 'Escape' && menuPaneliKapat()) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
     } else if (e.code === 'KeyF' && e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey) {
       e.preventDefault();
       e.stopPropagation();
@@ -1368,6 +1370,15 @@
     }
   });
 
+  function menuPaneliKapat() {
+    var menu = perdeler[durum()];
+    var panel = (menu?._paneller || []).find(function (p) { return !p.classList.contains('gizli'); });
+    if (!panel) return false;
+    panelAcikYap(panel, false);
+    (panel._dugme || menu.querySelector('button')).focus({ preventScroll: true });
+    return true;
+  }
+
   function kontrolcuMenuTusu(no) {
     if (tusSecimi) {
       if (!tusSecimi.kontrolcu) return;
@@ -1381,11 +1392,7 @@
     var d = durum(), pencere = el.harita.open ? el.harita : el.baslangicOnayi;
     if (no === 1 || no === 9 || (d === 'mola' && GIRDI.padEylemi(no) === 'esc' && no > 1 && no < 12)) {
       if (pencere.open) { pencere.close(); return; }
-      var acik = (perdeler[d]?._paneller || []).find(function (panel) { return !panel.classList.contains('gizli'); });
-      if (acik) {
-        panelAcikYap(acik, false);
-        (acik._dugme || perdeler[d].querySelector('button')).focus();
-      } else if (d === 'mola') durumYap('oyun');
+      if (!menuPaneliKapat() && d === 'mola') durumYap('oyun');
       return;
     }
     var alan = pencere.open ? pencere : perdeler[d];

@@ -14,7 +14,7 @@ Kış geçitlerinde kervanlara yol gösteren Bahtiyar, buluşmak için Yanık K�
 |---|---|---|
 | I. Yanık Köy | Sağanak altında harabeler, yıkık kilise ve Kemik Çukuru | Gormagul |
 | II. Kül Geçidi | Kızıl kül, maden ocakları ve Lav Köprüsü. Balta Atışı ve geri çağırma açılır. | Vargor |
-| III. Ayaz Hisarı | Tipi, zincirli tutsaklar ve kuzey ordusunun işaret kulesi. Kasırga ve Savaş Öfkesi açılır. | Skarn |
+| III. Ayaz Hisarı | Tipi, zincirli tutsaklar ve kuzey ordusunun işaret kulesi. Kasırga açılır. | Skarn |
 
 | | |
 |---|---|
@@ -50,7 +50,7 @@ Başlık ve mola ekranındaki **Grafik** menüsünde iki seçenek bulunur. **Tem
 
 - Baltayı fırlattıktan sonra aynı tuşla geri çağır. Geri dönerken yolundaki düşmanlara da vurur. Kalkanlılara yandan yaklaşabilir veya ağır savurmayla savunmalarını açabilirsin.
 - Yanık Köy’de savur ve atıl. Kül Geçidi’nde baltayı fırlatıp geri çağırabilir ve ağır vuruş yapabilirsin.
-- Ayaz Hisarı’nda isabet aldığında veya vurduğunda öfke birikir. **Savaş Öfkesi** tam dolu çubuğu kullanır. Üçüncü bölümde açılan **Kasırga**, X’i basılı tuttuğun sürece aynı çubuktan harcar. Dönerken hareket edebilirsin.
+- Yanık Köy’den itibaren isabet aldığında veya vurduğunda öfke birikir. **Savaş Öfkesi** tam dolu çubuğu kullanır. Üçüncü bölümde açılan **Kasırga**, X’i basılı tuttuğun sürece aynı çubuktan harcar. Dönerken hareket edebilirsin.
 - Şifa iksirleri düşmanlardan çıkar. Lav ve ateş alanlarının kenarından dolaş. Bölüm sonu düşmanını yenince sonuç ekranından sonraki bölüme geç.
 - Mola menüsündeki **Harita ve Hikâye** düğmesi **Kuzeyin Son Ateşi** önsözünün rotasını açar. Bölümleri bitirdikçe sonraki durağın hikâye kartına erişirsin.
 - Mola menüsünden bulunduğun bölümü yeniden başlatabilir veya onay verip Yanık Köy’e dönebilirsin. Ana ses, efekt ve müzik ayrı ayarlanır.

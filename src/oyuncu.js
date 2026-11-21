@@ -170,7 +170,7 @@
     S.oto.gorulen = new Map();
   }
   iciSifirla();
-  var YETENEK_BOLUMU = { balta: 2, agir: 2, kasirga: 3, ofke: 3 };
+  var YETENEK_BOLUMU = { balta: 2, agir: 2, kasirga: 3, ofke: 1 };
   P.yetenekAcik = function (ad) { return OYUN.bolum >= YETENEK_BOLUMU[ad]; };
   P._ic = function () { return S; };   // test/ölçüm için
 
@@ -1523,7 +1523,7 @@
       P.y -= 56;
     }
     S.ox = P.x; S.oy = P.y; S.gv = 0; S.vR = 0;
-    P.can = P.canMax = AYAR.canMax; P.ofke = P.yetenekAcik('ofke') ? 24 : 0; P.ofkeli = false; P.baltaVar = true; P.canli = true;
+    P.can = P.canMax = AYAR.canMax; P.ofke = P.yetenekAcik('kasirga') ? 24 : 0; P.ofkeli = false; P.baltaVar = true; P.canli = true;
     P.kasirgaFaz = -1; P.kasirgaAci = 0;
     P.durum = 'serbest'; P.dokunulmazSure = 0; P.aci = -PI / 2; P.yon = 4; P.tutusT = 0;
     if (P.sprite) { P.sprite.alpha = 1; }
