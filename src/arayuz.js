@@ -88,24 +88,69 @@
   }
   function tus(t, genis) { return '<span class="ar-tus' + (genis ? ' genis' : '') + '">' + t + '</span>'; }
 
-  var SAVUR_TUS = fare('sol') + tus('O'), BALTA_TUS = fare('sag') + tus('P');
+  function atananTus(ad) { return tus(GIRDI.tusAdi(ad).replace(/&/g, '&amp;').replace(/</g, '&lt;'), ad === 'bosluk'); }
+  var SAVUR_TUS, BALTA_TUS, tusPanelleri = [], tusSecimi = null;
   var KONTROLLER = [
-    [tus('W') + tus('A') + tus('S') + tus('D'), 'Yürü'],
-    [fare(''), 'Nişan al'],
-    [SAVUR_TUS, 'Savur'],
-    [BALTA_TUS, 'Baltayı fırlat / çağır'],
-    [tus('Boşluk', true), 'Atıl'],
-    [tus('Shift', true) + tus('F', true), 'Çözünürlük ve FPS'],
-    [tus('E'), 'Savaş Öfkesi · tam öfke'],
-    [tus('X'), 'Kasırga · basılı tutarak öfke harca'],
-    [tus('Esc'), 'Mola']
+    ['yukari', 'Yukarı'], ['sola', 'Sola'], ['asagi', 'Aşağı'], ['saga', 'Sağa'],
+    ['o', 'Savur'], ['p', 'Baltayı fırlat / çağır'], ['g', 'Ağır vuruş'], ['bosluk', 'Atıl'],
+    ['e', 'Savaş Öfkesi'], ['x', 'Kasırga'], ['esc', 'Mola'], ['r', 'Yeniden oyna']
   ];
+  function tusSeciminiKapat() {
+    if (!tusSecimi) return;
+    tusSecimi.dugme.removeAttribute('aria-pressed');
+    tusSecimi.yazi.textContent = 'Değiştirmek istediğin tuşa tıkla.';
+    tusSecimi = null;
+  }
   function kontrolPaneli(ebeveyn) {
-    var p = $('div', 'ar-panel ar-acilir gizli', ebeveyn);
+    var p = $('div', 'ar-panel ar-acilir ar-tus-ayarlari gizli', ebeveyn);
     $('h3', '', p, 'KONTROLLER');
-    var g = $('div', 'ar-kontrol', p);
-    KONTROLLER.forEach(function (k) { $('div', 't', g, k[0]); $('div', 'a', g, k[1]); });
+    var g = $('div', 'ar-kontrol', p), dugmeler = [];
+    KONTROLLER.forEach(function (k) {
+      var b = dugme(g, GIRDI.tusAdi(k[0]), function () {
+        if (tusSecimi && tusSecimi.dugme === b) { tusSeciminiKapat(); return; }
+        tusSeciminiKapat();
+        GIRDI.temizle();
+        tusSecimi = { ad: k[0], dugme: b, yazi: durumYazisi };
+        b.setAttribute('aria-pressed', 'true');
+        durumYazisi.textContent = k[1] + ' için yeni tuşa bas.';
+      }, 'tus-atama');
+      b.dataset.eylem = k[0];
+      dugmeler.push(b);
+      $('div', 'a', g, k[1]);
+    });
+    var alt = $('div', 'ar-tus-alt', p);
+    var durumYazisi = $('p', '', alt, 'Değiştirmek istediğin tuşa tıkla.');
+    durumYazisi.setAttribute('aria-live', 'polite');
+    dugme(alt, 'Varsayılanlar', function () {
+      tusSeciminiKapat(); GIRDI.tuslariSifirla();
+      durumYazisi.textContent = 'Varsayılan tuşlar geri yüklendi.';
+    }, 'kucuk');
+    $('p', 'ar-tus-fare', p, 'Fare: nişan, sol tık savur, sağ tık balta · Shift + F: çözünürlük ve FPS');
+    tusPanelleri.push(dugmeler);
     return p;
+  }
+  function tusEtiketleriniYaz() {
+    SAVUR_TUS = fare('sol') + atananTus('o');
+    BALTA_TUS = fare('sag') + atananTus('p');
+    for (var grup of tusPanelleri) for (var b of grup) {
+      b.textContent = GIRDI.tusAdi(b.dataset.eylem);
+      var ad = KONTROLLER.find(function (k) { return k[0] === b.dataset.eylem; })[1];
+      b.setAttribute('aria-label', ad + ': ' + b.textContent);
+    }
+    if (!el.savur) return;
+    el.savur.querySelector('.tg-yer').innerHTML = SAVUR_TUS;
+    el.balta.querySelector('.tg-yer').innerHTML = BALTA_TUS;
+    el.atil.querySelector('.tg-yer').innerHTML = GIRDI.tusAdi('bosluk') === 'Boşluk' ? IKON.bosluk : atananTus('bosluk');
+    el.kasirga.querySelector('.tg-yer').innerHTML = atananTus('x');
+    var ofkeTusu = el.ofke.querySelector('.q text');
+    var ofkeAdi = GIRDI.tusAdi('e');
+    ofkeTusu.textContent = ofkeAdi.length > 4 ? ofkeAdi.slice(0, 3) + '…' : ofkeAdi;
+    ofkeTusu.setAttribute('font-size', ofkeAdi.length > 1 ? '8' : '18');
+    el.ofke.title = 'Savaş Öfkesi · ' + ofkeAdi + ' · 100 öfke';
+    el.kasirga.title = 'Kasırga · ' + GIRDI.tusAdi('x') + ' tuşunu basılı tutarak öfke harca';
+    el.hikayeYetenek.innerHTML = ipucuMetinleri().kasirga;
+    if (ipucu?.aktif) el.ipucu.innerHTML = '<span class="ic">' + ipucuMetinleri()[ipucu.aktif] + '</span>';
+    zaferHazirla();
   }
 
   /* ───────── ses ayarı ───────── */
@@ -139,6 +184,7 @@
     panelAcikYap(panel, ac);
   }
   function panelAcikYap(panel, acik) {
+    if (!acik && tusSecimi && panel.contains(tusSecimi.dugme)) tusSeciminiKapat();
     panel.classList.toggle('gizli', !acik);
     if (panel._dugme) panel._dugme.setAttribute('aria-expanded', String(acik));
   }
@@ -264,7 +310,7 @@
     el.atil = rozet('atil', IKON.atil, IKON.bosluk, 'atıl', '<i class="bekle"></i>');
     el.atilBekle = el.atil.querySelector('.bekle');
     el.ofke.title = 'Savaş Öfkesi · E · 100 öfke';
-    el.kasirga = rozet('kasirga gizli', IKON.savur, tus('X'), 'Kasırga');
+    el.kasirga = rozet('kasirga gizli', IKON.savur, atananTus('x'), 'Kasırga');
     el.kasirga.title = 'Kasırga · X tuşunu basılı tutarak öfke harca';
 
     el.ipucu = $('div', 'ar-ipucu', gost);
@@ -281,7 +327,7 @@
     el.hikayeBaslik = el.hikaye.querySelector('.ar-hikaye-baslik');
     el.hikayeMetin = el.hikaye.querySelector('.ar-hikaye-metin');
     el.hikayeYetenek = el.hikaye.querySelector('.ar-hikaye-yetenek');
-    el.hikayeYetenek.innerHTML = IPUCLARI.kasirga;
+    el.hikayeYetenek.innerHTML = ipucuMetinleri().kasirga;
     el.hikayeKart.addEventListener('click', function (e) {
       if (!hikayeAcik || performance.now() - hikayeAcilmaT < 250) return;
       e.stopPropagation();
@@ -388,7 +434,7 @@
     el.olduOzet = $('div', 'ar-ozet ar-gec', o);
     var od = $('div', 'ar-gec', o);
     dugme(od, 'YENİDEN DENE', yenidenBasla, 'ana');
-    $('div', 'ar-ipucu-alt ar-gec', o, tus('R') + ' veya ' + tus('Enter', true) + ' ile yeniden dene');
+    $('div', 'ar-ipucu-alt ar-gec', o, atananTus('r') + ' veya ' + tus('Enter', true) + ' ile yeniden dene');
 
     /* zafer */
     var z = perdeler.kazandi = $('div', 'ar-perde kazandi gizli', kok);
@@ -397,7 +443,7 @@
     var zd = $('div', 'ar-menu ar-gec', z);
     el.zaferAna = dugme(zd, 'BÖLÜM II: KÜL GEÇİDİ ▶', function () { if (el.zaferAna._eylem) el.zaferAna._eylem(); }, 'ana');
     el.zaferIkinci = dugme(zd, 'TEKRAR OYNA', function () { if (el.zaferIkinci._eylem) el.zaferIkinci._eylem(); });
-    el.zaferIpucu = $('div', 'ar-ipucu-alt ar-gec', z, tus('Enter', true) + ' veya ' + tus('R'));
+    el.zaferIpucu = $('div', 'ar-ipucu-alt ar-gec', z, tus('Enter', true) + ' veya ' + atananTus('r'));
     zaferHazirla();
 
     istSifirla();
@@ -595,26 +641,27 @@
     devAcik = false; aktifBossRef = null; sonKazandiBolum = null;
   }
 
-  var IPUCLARI = {
-    yuru: tus('W') + tus('A') + tus('S') + tus('D') + ' yürü',
+  function ipucuMetinleri() { return {
+    yuru: atananTus('yukari') + atananTus('sola') + atananTus('asagi') + atananTus('saga') + ' yürü',
     savur: SAVUR_TUS + ' savur — basılı tut, zincir vur',
-    atil: tus('Boşluk', true) + ' atıl',
+    atil: atananTus('bosluk') + ' atıl',
     balta: BALTA_TUS + ' baltayı fırlat — dönene dek savuramazsın',
     ok: SAVUR_TUS + ' savurarak okları geri gönder',
     kalkan: 'Kalkanlıyı yandan vur ya da ' + BALTA_TUS + ' balta at',
     cagir: BALTA_TUS + ' baltayı geri çağır — dönüşte yolundakileri biçer',
-    ofke: 'Savaş Öfkesi hazır · ' + tus('E'),
-    kasirga: 'Kasırga açıldı · ' + tus('X') + ' tuşunu basılı tut ve hareket et',
+    ofke: 'Savaş Öfkesi hazır · ' + atananTus('e'),
+    kasirga: 'Kasırga açıldı · ' + atananTus('x') + ' tuşunu basılı tut ve hareket et',
     yakici: SAVUR_TUS + ' savurarak çömleği geri gönder — ateşte durma',
     gormagulKaya: 'Büyük kaya alçalınca ' + SAVUR_TUS + ' savur ve geri sektir',
     vargorKoz: 'Köz küresine ' + SAVUR_TUS + ' savur, toteme geri gönder',
     ayazSkarn: 'Sütunu araya al. Zincir takılınca Skarn’a vur.',
-    ayazBuz: 'Buz çatlıyor — ' + tus('Boşluk', true) + ' ile atıl',
+    ayazBuz: 'Buz çatlıyor — ' + atananTus('bosluk') + ' ile atıl',
     ayazMizrak: 'Buz mızrağı yaklaşınca ' + SAVUR_TUS + ' savur',
     ayazKapi: 'Kapının zincirini baltayla kır',
     ayazZincir: 'Dönen baltayı zincirin hattından geçir.',
     ayazMuhafiz: 'Muhafız boşa vurunca yanına geç, baltayla zırhını kır.'
   };
+  }
   var IPUCU_ANAHTAR = 'barbar-ipucu', ipucuGorulen = {};
   try { ipucuGorulen = JSON.parse(localStorage.getItem(IPUCU_ANAHTAR) || '{}') || {}; } catch (e) { ipucuGorulen = {}; }
   function ipucuKaydet() { try { localStorage.setItem(IPUCU_ANAHTAR, JSON.stringify(ipucuGorulen)); } catch (e) { /* yok */ } }
@@ -656,7 +703,7 @@
     }
     if (!ad) return;
     ipucu.aktif = ad; ipucu.aktifT = 0; ipucu.gosterildi[ad] = true; ipucuKaydet();
-    el.ipucu.innerHTML = '<span class="ic">' + IPUCLARI[ad] + '</span>';
+    el.ipucu.innerHTML = '<span class="ic">' + ipucuMetinleri()[ad] + '</span>';
     el.ipucu.className = 'ar-ipucu goster';
   }
 
@@ -978,18 +1025,18 @@
       el.zaferAna._eylem = function () { bolumGec(2); };
       el.zaferIkinci.textContent = 'TEKRAR OYNA';
       el.zaferIkinci._eylem = yenidenBasla;
-      if (el.zaferIpucu) el.zaferIpucu.innerHTML = tus('Enter', true) + ' ile Bölüm II · ' + tus('R') + ' ile tekrar oyna';
+      if (el.zaferIpucu) el.zaferIpucu.innerHTML = tus('Enter', true) + ' ile Bölüm II · ' + atananTus('r') + ' ile tekrar oyna';
     } else if (b === 2) {
       el.zaferAna.textContent = 'BÖLÜM III: AYAZ HİSARI ▶';
       el.zaferAna._eylem = function () { bolumGec(3); };
       el.zaferIkinci.textContent = 'TEKRAR OYNA';
       el.zaferIkinci._eylem = yenidenBasla;
-      el.zaferIpucu.innerHTML = tus('Enter', true) + ' ile Bölüm III · ' + tus('R') + ' ile tekrar oyna';
+      el.zaferIpucu.innerHTML = tus('Enter', true) + ' ile Bölüm III · ' + atananTus('r') + ' ile tekrar oyna';
     } else {
       el.zaferAna.textContent = 'BAŞTAN OYNA';
       el.zaferAna._eylem = oyunBasinaDon;
       el.zaferIkinci._eylem = null;
-      if (el.zaferIpucu) el.zaferIpucu.innerHTML = tus('R') + ' veya ' + tus('Enter', true) + ' ile baştan oyna';
+      if (el.zaferIpucu) el.zaferIpucu.innerHTML = atananTus('r') + ' veya ' + tus('Enter', true) + ' ile baştan oyna';
     }
   }
   function ozetYaz(kutu, satirlar) {
@@ -998,6 +1045,7 @@
   function sureYazi(sn) { sn = Math.round(sn); var d = Math.floor(sn / 60), s = sn % 60; return d + ':' + (s < 10 ? '0' : '') + s; }
   var sonDurum = null;
   function durumDegisti(d) {
+    tusSeciminiKapat();
     if (!kok) return;
     if (d === sonDurum) return;
     var onceki = sonDurum; sonDurum = d;
@@ -1049,7 +1097,17 @@
   /* ───────── klavye ve hikâye geçişi ───────── */
   var sonKlavye = 0;
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' && el.baslangicOnayi.open) {
+    if (tusSecimi && e.code !== 'Tab') {
+      e.preventDefault(); e.stopImmediatePropagation();
+      if (e.repeat || e.metaKey || e.ctrlKey || e.altKey) return;
+      var bayrak = tusSecimi;
+      if (GIRDI.tusAta(bayrak.ad, e.code)) {
+        tusSeciminiKapat();
+        bayrak.yazi.textContent = 'Tuş atandı. Kullanımdaki tuşlar yer değiştirir.';
+      } else bayrak.yazi.textContent = 'Bu tuş menü veya tarayıcı için ayrılmış. Başka bir tuşa bas.';
+      return;
+    }
+    if (e.key === 'Escape'  && el.baslangicOnayi.open) {
       e.preventDefault();
       e.stopPropagation();
       el.baslangicOnayi.close();
@@ -1081,14 +1139,14 @@
       if (ae && ae.classList && ae.classList.contains('ar-dugme') && ae !== bBasla) return;
       e.preventDefault(); sonKlavye = simdi; basla(); return;
     }
-    if (d === 'oldu' && (k === 'Enter' || k === 'r' || k === 'R')) {
+    if (d === 'oldu' && (k === 'Enter' || GIRDI.tusEylemi(e.code) === 'r')) {
       if (document.activeElement && document.activeElement.classList && document.activeElement.classList.contains('ar-dugme')) document.activeElement.blur();
       e.preventDefault(); sonKlavye = simdi; yenidenBasla(); return;
     }
-    if (d === 'kazandi' && (k === 'Enter' || k === 'r' || k === 'R')) {
+    if (d === 'kazandi' && (k === 'Enter' || GIRDI.tusEylemi(e.code) === 'r')) {
       var ak = document.activeElement;
       e.preventDefault(); sonKlavye = simdi;
-      if (k === 'r' || k === 'R') {
+      if (GIRDI.tusEylemi(e.code) === 'r') {
         if (ak && ak.classList && ak.classList.contains('ar-dugme')) ak.blur();
         var eylem = el.zaferIkinci._eylem || el.zaferAna._eylem;
         if (eylem) eylem();
@@ -1101,7 +1159,7 @@
       }
       return;
     }
-    if (k === 'Escape') {
+    if (GIRDI.tusEylemi(e.code) === 'esc') {
       if (d !== 'oyun' && d !== 'mola') return;
       if (O() && O().molaTusu) return;   // çekirdek kendisi yapıyor
       // çekirdek de mola tuşunu işliyorsa çift değiştirme olmasın: kısa süre sonra durum hâlâ aynıysa biz değiştiririz
@@ -1114,6 +1172,7 @@
   /* ───────── olaylar ───────── */
   function olaylariBagla() {
     var L = window.OLAY; if (!L || !L.on) return;
+    L.on('tusAtamalari', tusEtiketleriniYaz);
     L.on('durum', function (v) { durumDegisti(typeof v === 'string' ? v : (v && (v.d || v.durum)) || durum()); });
     L.on('bolum', function () { hazirIzle(!!(O() && O().onYukleme)); });
     L.on('kazandi', function (v) {
@@ -1195,7 +1254,9 @@
     _guncelle: guncelleGuvenli
   };
 
+  tusEtiketleriniYaz();
   kur();
+  tusEtiketleriniYaz();
   olaylariBagla();
   if (window.OYUN && OYUN.sistem) {
     OYUN.sistem('arayuz', {

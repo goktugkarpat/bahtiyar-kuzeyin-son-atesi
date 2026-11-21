@@ -303,35 +303,81 @@
 
   // ---------- Girdi ----------
   var _tut = new Set(), _gelen = new Set(), _bu = new Set(), _altAdim = false;
-  var KOD = {
-    KeyW: ['w', 'yukari'], ArrowUp: ['yukari'], KeyS: ['s', 'asagi'], ArrowDown: ['asagi'],
-    KeyA: ['a', 'sola'], ArrowLeft: ['sola'], KeyD: ['d', 'saga'], ArrowRight: ['saga'],
-    Space: ['bosluk'], Escape: ['esc'], Enter: ['enter'], NumpadEnter: ['enter'], ShiftLeft: ['shift'], ShiftRight: ['shift'], Tab: ['tab']
+  var VARSAYILAN_TUSLAR = {
+    yukari: 'KeyW', sola: 'KeyA', asagi: 'KeyS', saga: 'KeyD', o: 'KeyO', p: 'KeyP',
+    g: 'KeyG', bosluk: 'Space', e: 'KeyE', x: 'KeyX', esc: 'Escape', r: 'KeyR'
   };
-  function tuslar(e) {
-    var k = KOD[e.code]; if (k) return k;
-    if (e.code && e.code.indexOf('Key') === 0) return [e.code.slice(3).toLowerCase()];
-    if (e.code && e.code.indexOf('Digit') === 0) return [e.code.slice(5)];
-    if (e.key && e.key.length === 1) return [e.key.toLowerCase()];
-    return null;
+  var YON_TUSLARI = { ArrowUp: 'yukari', ArrowLeft: 'sola', ArrowDown: 'asagi', ArrowRight: 'saga' };
+  var TUS_ADLARI = { Space: 'Boşluk', Escape: 'Esc', ArrowUp: '↑', ArrowLeft: '←', ArrowDown: '↓', ArrowRight: '→',
+    Backspace: 'Sil', Delete: 'Delete', Insert: 'Insert', PageUp: 'PgUp', PageDown: 'PgDn', Home: 'Home', End: 'End',
+    ShiftLeft: 'Sol Shift', ShiftRight: 'Sağ Shift', Minus: '−', Equal: '=', Backquote: '`', BracketLeft: '[',
+    BracketRight: ']', Semicolon: ';', Quote: "'", Backslash: 'Ters eğik çizgi', IntlBackslash: '<', Comma: ',', Period: '.', Slash: '/',
+    NumpadAdd: 'Num +', NumpadSubtract: 'Num −', NumpadMultiply: 'Num ×', NumpadDivide: 'Num ÷', NumpadDecimal: 'Num .' };
+  var TUS_KAYDI = 'barbar-klavye';
+  var atamalar = Object.assign({}, VARSAYILAN_TUSLAR);
+  function atanabilir(kod) {
+    return typeof kod === 'string' && (Object.hasOwn(TUS_ADLARI, kod) || /^(Key[A-Z]|Digit[0-9]|Numpad[0-9])$/.test(kod));
+  }
+  try {
+    var kayitliTuslar = JSON.parse(localStorage.getItem(TUS_KAYDI) || 'null');
+    if (kayitliTuslar) {
+      var adayTuslar = Object.assign({}, atamalar);
+      for (var eylem in atamalar) if (atanabilir(kayitliTuslar[eylem])) adayTuslar[eylem] = kayitliTuslar[eylem];
+      if (new Set(Object.values(adayTuslar)).size === Object.keys(atamalar).length) atamalar = adayTuslar;
+    }
+  } catch (e) { /* Tarayıcı depolama izni vermeyebilir. */ }
+  var tusaGore = new Map();
+  function tusHaritasiniKur() {
+    tusaGore.clear();
+    for (var ad in atamalar) tusaGore.set(atamalar[ad], ad);
+    for (var kod in YON_TUSLARI) {
+      var yon = YON_TUSLARI[kod];
+      if (!tusaGore.has(kod) && atamalar[yon] === VARSAYILAN_TUSLAR[yon]) tusaGore.set(kod, yon);
+    }
+  }
+  tusHaritasiniKur();
+  var basiliKodlar = new Map();
+  function tuslariKaydet() {
+    GIRDI.temizle();
+    tusHaritasiniKur();
+    try { localStorage.setItem(TUS_KAYDI, JSON.stringify(atamalar)); } catch (e) { /* Bu oturumda geçerli kalır. */ }
+    OLAY.emit('tusAtamalari');
   }
   var GIRDI = window.GIRDI = {
     hx: 0, hy: 0, saldiriKlavye: false,
     fare: { x: W / 2, y: H / 2, ex: W / 2, ey: H / 2, sol: false, sag: false, ekranda: false },
+    tusEylemi: function (kod) { return tusaGore.get(kod); },
+    tusAdi: function (ad) {
+      var kod = atamalar[ad];
+      return TUS_ADLARI[kod] || kod.replace(/^Key|^Digit/, '').replace(/^Numpad/, 'Num ');
+    },
+    tusAta: function (ad, kod) {
+      if (!Object.hasOwn(atamalar, ad) || !atanabilir(kod)) return false;
+      var diger = tusaGore.get(kod);
+      if (diger && diger !== ad && atamalar[diger] === kod) atamalar[diger] = atamalar[ad];
+      atamalar[ad] = kod;
+      tuslariKaydet();
+      return true;
+    },
+    tuslariSifirla: function () { atamalar = Object.assign({}, VARSAYILAN_TUSLAR); tuslariKaydet(); },
     basildi: function (t) { return !_altAdim && _bu.has(t); },
     tutuluyor: function (t) { return _tut.has(t); },
-    temizle: function () { _tut.clear(); _gelen.clear(); _bu.clear(); GIRDI.fare.sol = GIRDI.fare.sag = false; GIRDI.hx = GIRDI.hy = 0; }
+    temizle: function () { basiliKodlar.clear(); _tut.clear(); _gelen.clear(); _bu.clear(); GIRDI.fare.sol = GIRDI.fare.sag = false; GIRDI.hx = GIRDI.hy = 0; }
   };
   window.addEventListener('keydown', function (e) {
-    if (e.metaKey || e.ctrlKey) return;
-    var k = tuslar(e); if (!k) return;
-    if (!e.repeat && (k[0] === 'o' || k[0] === 'p')) GIRDI.saldiriKlavye = true;
-    if (e.code === 'Space' || e.code === 'Tab' || e.code.indexOf('Arrow') === 0) e.preventDefault();
-    for (var i = 0; i < k.length; i++) { if (!e.repeat || !_tut.has(k[i])) _gelen.add(k[i]); _tut.add(k[i]); }
+    if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey || e.repeat || e.target.closest?.('input, textarea, [contenteditable="true"]')) return;
+    var ad = GIRDI.tusEylemi(e.code);
+    if (!ad) return;
+    if ((OYUN.durum === 'oyun' && !e.target.closest?.('button')) || ad === 'esc') e.preventDefault();
+    if (ad === 'o' || ad === 'p') GIRDI.saldiriKlavye = true;
+    basiliKodlar.set(e.code, ad); _gelen.add(ad); _tut.add(ad);
   });
   window.addEventListener('keyup', function (e) {
-    var k = tuslar(e); if (!k) return;
-    for (var i = 0; i < k.length; i++) _tut.delete(k[i]);
+    var ad = basiliKodlar.get(e.code);
+    if (!ad) return;
+    basiliKodlar.delete(e.code);
+    for (var basili of basiliKodlar.values()) if (basili === ad) return;
+    _tut.delete(ad);
   });
   function fareKonum(e) {
     if (!isFinite(e.clientX) || !isFinite(e.clientY)) return;

@@ -53,6 +53,7 @@
     // öfke
     ofkeIsabet: 1.2, ofkeOldur: 2.2, ofkeHasarAl: 0.5, ofkeAzal: 0.8 /*/sn*/, ofkeAzalBekle: 3,
     ofkeSure: 6, ofkeHiz: 1.2, ofkeHasar: 1.6, ofkeYay: 200, ofkeMenzil: 125, ofkeKalkan: 0.3,
+    ofkeCanCalma: 0.15, ofkeCanSiniri: 40,
     ofkeTempo: 1.2,        // öfkede savurma bu kat hızlı
     kasirga: { ofkeSaniye: 8, hazirlik: 0.07, donus: 0.28, toparlan: 0.16, menzil: 158, hasar: 26, guc: 165, kesilmeGucu: 360 },
     ofkeAcSars: 11, ofkeDalgaR: 180, ofkeDalgaGuc: 560, ofkeDalgaHasar: 8, ofkeAcDokunulmaz: 0.35, ofkeKukre: 0.43,
@@ -99,10 +100,19 @@
     }
     return res;
   }
-  function hasarVer(d, m, o) {
-    if (window.DUSMAN && DUSMAN.hasarVer) return DUSMAN.hasarVer(d, m, o) || {};
-    if (d && typeof d.hasarAl === 'function') return d.hasarAl(m, o) || {};
-    return {};
+  function hasarVer(d, m, o, kukreme) {
+    var once = d ? d.can : 0, sonuc;
+    if (window.DUSMAN && DUSMAN.hasarVer) sonuc = DUSMAN.hasarVer(d, m, o);
+    else if (d && typeof d.hasarAl === 'function') sonuc = d.hasarAl(m, o);
+    if (P.ofkeli && !kukreme && d && Number.isFinite(once) && Number.isFinite(d.can)) {
+      var hasar = once - Math.max(0, d.can);
+      var kazanilan = Math.min(hasar * AYAR.ofkeCanCalma, S.ofkeCanKaldi, P.canMax - P.can);
+      if (kazanilan > 0 && P.canli) {
+        iyiles(kazanilan);
+        S.ofkeCanKaldi -= kazanilan;
+      }
+    }
+    return sonuc || {};
   }
   function vurVaril(hx, hy, hr, hasar) {
     if (!(window.BOLUM && BOLUM.varilVur)) return 0;
@@ -154,7 +164,7 @@
       atilT: 0, atilBekle: 0, atilAci: 0, atilVurulan: [], atilDok: 0,
       kasirgaT: 0, kasirgaEvre: '', kasirgaVurulan: new Set(), kasirgaCevre: false, kukreT: 0,
       atT: 0, sersemT: 0, tSavur: 0, tAgir: 0, tAtil: 0, tBalta: 0, kayaSavurT: -Infinity,
-      ofkeT: 0, ofkeGorunum: 0, sonIsabet: 99, adimT: 0, animAd: '', oto: { t: 0, atilT: 0, baltaT: 0 },
+      ofkeT: 0, ofkeCanKaldi: 0, ofkeGorunum: 0, sonIsabet: 99, adimT: 0, animAd: '', oto: { t: 0, atilT: 0, baltaT: 0 },
       hedefYon: 4, donusT: 0, yFaz: 0, vR: 0, gv: 0, yuruyor: false, durT: 0, ox: null, oy: null,
       fex: null, fey: null, nisanTaze: false, aimKurtar: false, atE: 0, atBekleyen: null, atBirak: 0, sonraki: false, sonrakiAgir: false, kilitAd: '', kilitSon: 0, parlaT: 0,
       hizliT: 0, sersemGecen: 0, tutusTik: 0
@@ -1223,6 +1233,7 @@
       if (S.sonIsabet > AYAR.ofkeAzalBekle && P.ofke < 100) P.ofke = Math.max(0, P.ofke - AYAR.ofkeAzal * dt);
       if (g.ofke && P.ofke >= 100 && P.canli && P.durum !== 'kasirga') {
         P.ofkeli = true; S.ofkeT = AYAR.ofkeSure;
+        S.ofkeCanKaldi = AYAR.ofkeCanSiniri;
         if (P.durum === 'serbest' && P.baltaVar && P.sprite && P.sprite.animVar && P.sprite.animVar('ofke_kukre')) {
           S.kukreT = 0; P.durum = 'kukre';
           anim('ofke_kukre', { dongu: false, bastan: true, hiz: 0 });
@@ -1236,7 +1247,7 @@
           var d = ay[i]; if (d.olu) continue;
           if (Math.hypot(d.x - P.x, d.y - P.y) > AYAR.ofkeDalgaR + (d.r || 20)) continue;
           var a = Math.atan2(d.y - P.y, d.x - P.x);
-          var son = hasarVer(d, AYAR.ofkeDalgaHasar, { aci: a, guc: AYAR.ofkeDalgaGuc, tur: 'savur', agir: true });
+          var son = hasarVer(d, AYAR.ofkeDalgaHasar, { aci: a, guc: AYAR.ofkeDalgaGuc, tur: 'savur', agir: true }, true);
           isabetSonrasi(d, son, a, AYAR.ofkeDalgaGuc, 'savur', true);
         }
         vurVaril(P.x, P.y, AYAR.ofkeDalgaR, AYAR.ofkeDalgaHasar);

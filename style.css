@@ -827,3 +827,19 @@ body.d-mola .ar-uyari, body.d-mola .ar-ipucu, body.d-mola .ar-hikaye, body.d-mol
 @keyframes ar-ofke-nefes { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.12); } }
 /* BAŞLA düğmesi resimler yüklenirken */
 .ar-dugme.bekle { opacity: .72; cursor: progress; letter-spacing: .12em; }
+
+/* Başlık ve mola menülerindeki klavye atamaları. */
+.ar-perde.baslik .ar-tus-ayarlari { top: 50%; transform: translateY(-50%); }
+.ar-tus-ayarlari .ar-kontrol, .ar-perde.mola .ar-tus-ayarlari .ar-kontrol {
+  grid-template-columns: 92px minmax(0, 1fr) 92px minmax(0, 1fr);
+}
+.ar-kontrol .ar-tus-atama {
+  min-width: 0; width: 100%; margin: 0; padding: 5px 4px;
+  font-size: 13px; letter-spacing: .02em; overflow-wrap: anywhere;
+}
+.ar-kontrol .ar-tus-atama[aria-pressed="true"] { color: #ffcf86; outline: 1px solid #d9915e; }
+.ar-tus-alt { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 10px; }
+.ar-tus-alt p, .ar-tus-fare { margin: 0; font-size: 13px; color: var(--kemik-soluk); }
+.ar-tus-alt .ar-dugme { min-width: 0; margin: 0; font-size: 12px; padding: 6px 12px; }
+.ar-tus-fare { margin-top: 8px; }
+.ar-rozet .tg-yer .ar-tus { width: auto; min-width: 18px; max-width: 52px; padding: 0 2px; white-space: nowrap; overflow: hidden; }
