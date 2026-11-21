@@ -138,11 +138,21 @@
   //   Görünen dünya: x ∈ [kamera.x + x0, kamera.x + x0 + w], y ∈ [kamera.y + y0, kamera.y + y0 + h]. Oynanış yine 1280×720'ye göre.
   var gorunum = OYUN.gorunum = { x0: 0, y0: 0, w: W, h: H };
   var _ox = 0, _oy = 0, _lw = W, _lh = H, _TAVAN = 4;   // _TAVAN: en çok 4 aygıt pikseli / mantıksal birim (dev ekranlarda dolum maliyeti)
-  var GRAFIK_ANAHTAR = "barbar-grafik-v2";
+  var GRAFIK_ANAHTAR = "barbar-grafik-v3";
   var grafik = OYUN.grafik = { golge: 0, isik: 0, atmosfer: 0 };
   function kaliteMi(deger) { return deger === 0 || deger === 1 || deger === 2; }
   try {
     var kayit = JSON.parse(localStorage.getItem(GRAFIK_ANAHTAR));
+    if (!kayit) {
+      var onceki = JSON.parse(localStorage.getItem("barbar-grafik-v2"));
+      if (onceki) {
+        kayit = {};
+        Object.keys(grafik).forEach(function (ad) {
+          if (kaliteMi(onceki[ad])) kayit[ad] = Math.min(onceki[ad], 1);
+        });
+        localStorage.setItem(GRAFIK_ANAHTAR, JSON.stringify(kayit));
+      }
+    }
     if (kayit) Object.keys(grafik).forEach(function (ad) { if (kaliteMi(kayit[ad])) grafik[ad] = kayit[ad]; });
   } catch (e) { /* kayıt isteğe bağlı */ }
   OYUN.grafikYap = function (ad, deger) {

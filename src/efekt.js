@@ -1951,7 +1951,7 @@
     if (!yagmur) yagmurKur();
     yagmur.perde.visible = yagmur.zemin.visible = true;
     yagmur.yansima.visible = true;
-    var havaKalitesi = OYUN.grafik.atmosfer;
+    var havaKalitesi = OYUN.grafik.atmosfer === 2 ? 2.55 : OYUN.grafik.atmosfer * 2;
     var dt = Math.min(gd, .055);
     if (OYUN.durum === 'mola') dt = 0;
     var kutu = gor(), gorunen = gorD();
@@ -1994,7 +1994,7 @@
       s.visible = true;
       s.position.set(f.agizX ?? f.x, f.y + 6);
       s.scale.set(mesale ? .78 : 1.21, mesale ? 1.05 : .90);
-      s.alpha = (mesale ? .52 : .34) * (1 + .14 * OYUN.grafik.isik) * atesTitresim(i, f.tur) * (.92 + .08 * Math.sin(gT * 3 + i));
+      s.alpha = (mesale ? .52 : .34) * (1 + (OYUN.grafik.isik === 2 ? .36 : .28 * OYUN.grafik.isik)) * atesTitresim(i, f.tur) * (.92 + .08 * Math.sin(gT * 3 + i));
     }
     for (; n < yansimalar.length; n++) yansimalar[n].visible = false;
   }
@@ -2200,7 +2200,7 @@
           atesSayac[j] = Math.min(0.6, (atesSayac[j] || 0) + dt);
           var yayX = (tr === 'enkaz' || tr === 'koz') ? 20 : 9;
           var korYogun = bolumNo === 2;
-          var aralik = (korYogun ? .118 : .16) / (g * (1 + .14 * OYUN.grafik.atmosfer));
+          var aralik = (korYogun ? .118 : .16) / (g * (1 + (OYUN.grafik.atmosfer === 2 ? .36 : .28 * OYUN.grafik.atmosfer)));
           while (atesSayac[j] > aralik) {
             atesSayac[j] -= aralik;
             var cx = agizX + r(-yayX, yayX) * g, cy = f.y + r(-4, 4);

@@ -748,7 +748,7 @@
     for (var n=0;n<ruzgarSeritleri.length;n++) {
       var serit = ruzgarSeritleri[n], u=(t*(.11+n*.018)+n*.328)%1;
       serit.position.set(v.x0+v.w*(u*1.60-.30),v.y0+v.h*(.20+n*.29+u*.05));
-      serit.alpha=Math.sin(u*Math.PI)*tipiOran*(.20+.40*esinti)*(1 + .13 * kalite);
+      serit.alpha=Math.sin(u*Math.PI)*tipiOran*(.20+.40*esinti)*(1 + .13 * (kalite === 2 ? 2.55 : kalite * 2));
     }
     var kameraY = OYUN.kamera.y;
     uzakAtes.visible = kameraY > 920;
@@ -772,7 +772,7 @@
       k.s.x = v.x0 + k.x * v.w; k.s.y = v.y0 + k.y * v.h;
       var kenar = Math.max(0, Math.min(1, k.x * 18, k.y * 18, (1 - k.x) * 18, (1 - k.y) * 18));
       k.s.alpha = tipiOran * kenar * (.33 + .48 * k.z + esinti * .17);
-      if (i >= 178) k.s.alpha *= Math.min(1, Math.max(0,(tipiOran-.47)*1.85) + kalite * .10);
+      if (i >= 178) k.s.alpha *= Math.min(1, Math.max(0,(tipiOran-.47)*1.85) + (kalite === 2 ? .25 : kalite * .20));
     }
   }
   function kurtarmaSil() {
