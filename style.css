@@ -222,10 +222,6 @@ body.d-oyun, body.d-oyun #sahne, body.d-oyun canvas {
 /* Kontroller + ses paneli */
 .ar-acilir { width: 600px; margin: 10px auto 0; padding: 18px 26px 16px; box-sizing: border-box; }
 .ar-acilir h3 { margin: 0 0 10px; font-size: 15px; letter-spacing: .3em; color: #d86448; text-align: center; text-shadow: 0 2px 0 #000; }
-.ar-kontrol { display: grid; grid-template-columns: 136px 1fr 136px 1fr; row-gap: 8px; column-gap: 12px; align-items: center; font-size: 17px; }
-.ar-kontrol .t { text-align: right; white-space: nowrap; }
-.ar-kontrol .t .ar-tus.genis { min-width: 60px; }
-.ar-kontrol .a { color: var(--kemik); letter-spacing: .04em; }
 .ar-ses { display: grid; grid-template-columns: 90px 1fr 40px; column-gap: 12px; row-gap: 10px; align-items: center; font-size: 16px; }
 .ar-ses span.d { text-align: right; color: var(--kemik-soluk); font-size: 14px; font-variant-numeric: tabular-nums; }
 .ar-ses input[type=range] {
@@ -294,14 +290,6 @@ body.d-oyun, body.d-oyun #sahne, body.d-oyun canvas {
   background: linear-gradient(155deg, #26201e, #181616); filter: none;
 }
 .ar-perde.mola .ar-acilir h3 { text-align: left; padding-bottom: 10px; border-bottom: 1px solid #554239; color: #e3ad7c; }
-.ar-perde.mola .ar-kontrol {
-  grid-template-columns: 116px minmax(0, 1fr) 116px minmax(0, 1fr);
-  font-size: 14px; line-height: 1.28; gap: 6px 7px;
-}
-.ar-perde.mola .ar-kontrol .a { letter-spacing: 0; }
-.ar-perde.mola .ar-kontrol .ar-tus { min-width: 22px; height: 23px; margin: 0 1px 2px; padding: 0 4px; font-size: 12px; }
-.ar-perde.mola .ar-kontrol .ar-tus.genis { min-width: 46px; }
-.ar-perde.mola .ar-kontrol .ar-fare { width: 17px; height: 23px; }
 @media (max-aspect-ratio: 5/4) {
   .ar-mola-kart:has(.ar-acilir:not(.gizli)) { width: min(588px, 100%); }
   .ar-mola-govde:has(> .ar-acilir:not(.gizli)) { grid-template-columns: minmax(0, 1fr); gap: 13px; }
@@ -830,14 +818,26 @@ body.d-mola .ar-uyari, body.d-mola .ar-ipucu, body.d-mola .ar-hikaye, body.d-mol
 
 /* Başlık ve mola menülerindeki klavye atamaları. */
 .ar-perde.baslik .ar-tus-ayarlari { top: 50%; transform: translateY(-50%); }
-.ar-tus-ayarlari .ar-kontrol, .ar-perde.mola .ar-tus-ayarlari .ar-kontrol {
-  grid-template-columns: 92px minmax(0, 1fr) 92px minmax(0, 1fr);
+.ar-kontrol {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px 10px;
 }
 .ar-kontrol .ar-tus-atama {
-  min-width: 0; width: 100%; margin: 0; padding: 5px 4px;
-  font-size: 13px; letter-spacing: .02em; overflow-wrap: anywhere;
+  display: flex; align-items: center; justify-content: space-between; text-align: left;
+  gap: 8px; min-width: 0; width: 100%; min-height: 40px; margin: 0; padding: 6px 9px;
+  color: var(--kemik); font-size: 15px; line-height: 1.18; letter-spacing: 0;
+  border: 1px solid #5f4c3e; border-radius: 3px; filter: none;
+  background: linear-gradient(150deg, #342a24, #221c19);
 }
-.ar-kontrol .ar-tus-atama[aria-pressed="true"] { color: #ffcf86; outline: 1px solid #d9915e; }
+.ar-kontrol .ar-tus-atama:hover,
+.ar-kontrol .ar-tus-atama:focus-visible,
+.ar-kontrol .ar-tus-atama[aria-pressed="true"] {
+  color: #fff0d4; border-color: #c88d5c; background: linear-gradient(155deg, #4b3025, #2f211b);
+}
+.ar-kontrol .ar-tus-atama:focus-visible { outline: 1px solid #e6ac73; outline-offset: 1px; }
+.ar-kontrol .ar-tus-atama .ar-tus {
+  flex: 0 1 auto; min-width: 27px; max-width: 47%; min-height: 23px; height: auto;
+  margin: 0; padding: 4px 5px; text-align: center; overflow-wrap: anywhere; font-size: 12px;
+}
 .ar-tus-alt { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 10px; }
 .ar-tus-alt p, .ar-tus-fare { margin: 0; font-size: 13px; color: var(--kemik-soluk); }
 .ar-tus-alt .ar-dugme { min-width: 0; margin: 0; font-size: 12px; padding: 6px 12px; }

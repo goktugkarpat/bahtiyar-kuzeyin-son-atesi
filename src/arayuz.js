@@ -91,14 +91,18 @@
   function atananTus(ad) { return tus(GIRDI.tusAdi(ad).replace(/&/g, '&amp;').replace(/</g, '&lt;'), ad === 'bosluk'); }
   var SAVUR_TUS, BALTA_TUS, tusPanelleri = [], tusSecimi = null;
   var KONTROLLER = [
-    ['yukari', 'Yukarı'], ['sola', 'Sola'], ['asagi', 'Aşağı'], ['saga', 'Sağa'],
-    ['o', 'Savur'], ['p', 'Baltayı fırlat / çağır'], ['g', 'Ağır vuruş'], ['bosluk', 'Atıl'],
-    ['e', 'Savaş Öfkesi'], ['x', 'Kasırga'], ['esc', 'Mola'], ['r', 'Yeniden oyna']
+    ['yukari', 'Yukarı yürü'], ['o', 'Balta savur'],
+    ['sola', 'Sola yürü'], ['p', 'Baltayı fırlat / geri çağır'],
+    ['asagi', 'Aşağı yürü'], ['g', 'Ağır vuruş'],
+    ['saga', 'Sağa yürü'], ['bosluk', 'Atıl'],
+    ['esc', 'Molayı aç / kapat'], ['e', 'Savaş Öfkesi'],
+    ['r', 'Yeniden oyna'], ['x', 'Kasırga (basılı tut)']
   ];
+  var TUS_ATAMA_IPUCU = 'Bir eyleme tıkla, ardından yeni tuşa bas.';
   function tusSeciminiKapat() {
     if (!tusSecimi) return;
     tusSecimi.dugme.removeAttribute('aria-pressed');
-    tusSecimi.yazi.textContent = 'Değiştirmek istediğin tuşa tıkla.';
+    tusSecimi.yazi.textContent = TUS_ATAMA_IPUCU;
     tusSecimi = null;
   }
   function kontrolPaneli(ebeveyn) {
@@ -106,20 +110,21 @@
     $('h3', '', p, 'KONTROLLER');
     var g = $('div', 'ar-kontrol', p), dugmeler = [];
     KONTROLLER.forEach(function (k) {
-      var b = dugme(g, GIRDI.tusAdi(k[0]), function () {
+      var b = dugme(g, '', function () {
         if (tusSecimi && tusSecimi.dugme === b) { tusSeciminiKapat(); return; }
         tusSeciminiKapat();
         GIRDI.temizle();
         tusSecimi = { ad: k[0], dugme: b, yazi: durumYazisi };
         b.setAttribute('aria-pressed', 'true');
         durumYazisi.textContent = k[1] + ' için yeni tuşa bas.';
-      }, 'tus-atama');
+      }, 'ar-tus-atama');
       b.dataset.eylem = k[0];
-      dugmeler.push(b);
-      $('div', 'a', g, k[1]);
+      $('span', 'ar-tus-eylem', b).textContent = k[1];
+      var rozet = $('kbd', 'ar-tus', b);
+      dugmeler.push({ dugme: b, eylem: k[0], ad: k[1], rozet: rozet });
     });
     var alt = $('div', 'ar-tus-alt', p);
-    var durumYazisi = $('p', '', alt, 'Değiştirmek istediğin tuşa tıkla.');
+    var durumYazisi = $('p', '', alt, TUS_ATAMA_IPUCU);
     durumYazisi.setAttribute('aria-live', 'polite');
     dugme(alt, 'Varsayılanlar', function () {
       tusSeciminiKapat(); GIRDI.tuslariSifirla();
@@ -132,10 +137,10 @@
   function tusEtiketleriniYaz() {
     SAVUR_TUS = fare('sol') + atananTus('o');
     BALTA_TUS = fare('sag') + atananTus('p');
-    for (var grup of tusPanelleri) for (var b of grup) {
-      b.textContent = GIRDI.tusAdi(b.dataset.eylem);
-      var ad = KONTROLLER.find(function (k) { return k[0] === b.dataset.eylem; })[1];
-      b.setAttribute('aria-label', ad + ': ' + b.textContent);
+    for (var grup of tusPanelleri) for (var satir of grup) {
+      var tusAdi = GIRDI.tusAdi(satir.eylem);
+      satir.rozet.textContent = tusAdi;
+      satir.dugme.setAttribute('aria-label', satir.ad + ' · ' + tusAdi);
     }
     if (!el.savur) return;
     el.savur.querySelector('.tg-yer').innerHTML = SAVUR_TUS;
@@ -1103,7 +1108,7 @@
       var bayrak = tusSecimi;
       if (GIRDI.tusAta(bayrak.ad, e.code)) {
         tusSeciminiKapat();
-        bayrak.yazi.textContent = 'Tuş atandı. Kullanımdaki tuşlar yer değiştirir.';
+        bayrak.yazi.textContent = 'Atandı · ' + bayrak.dugme.getAttribute('aria-label');
       } else bayrak.yazi.textContent = 'Bu tuş menü veya tarayıcı için ayrılmış. Başka bir tuşa bas.';
       return;
     }

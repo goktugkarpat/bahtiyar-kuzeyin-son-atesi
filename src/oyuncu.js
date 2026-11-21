@@ -1121,7 +1121,9 @@
   }
   function iyiles(m) {
     if (!P.canli) return;
+    var once = P.can;
     P.can = Math.min(P.canMax, P.can + (m || 0));
+    if (P.can > once) emit('oyuncuIyilesti', { miktar: P.can - once });
   }
   function olum() {
     P.canli = false; P.durum = 'olu'; P.vx = P.vy = 0; P.tutusT = 0;

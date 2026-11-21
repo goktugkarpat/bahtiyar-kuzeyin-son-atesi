@@ -51,7 +51,7 @@
     atesIsik: 1.0,         // ateş ışığı gücü
     oyuncuIsik: 0,         // barbarın etrafındaki (eklemeli) aydınlık: kapalı (çıkartma gibi durmasın)
     dusukCan: 0.3,         // can bu oranın altındayken nabız atan kırmızı kenar
-    hasarSayisi: true,     // isabet başına can kaybı, aynı hedefte kısa aralıkla birleşir
+    hasarSayisi: true,     // can kaybı ve kazanımı, aynı hedefte kısa aralıkla birleşir
     turRenk: { goblin: 0x7d8f46, okcu: 0x6f7f48, kalkanli: 0x5e7044, saman: 0x8a7458, yakici: 0x6b7c46, baskinci: 0x8e929c, infazci: 0x5a5e66, vargor: 0x4c464a, dev: 0x9a8670, barbar: 0xc89b7c },
     kanRenk: [0x6e0808, 0x7c0b0a, 0x5a0606, 0x861210],      // havadaki damla (4. tur: koyu, doygun; eski 0x7a0b0b/0x8c1010/0x660808/0x9a1414)
     lekeRenk: [0x420505, 0x4c0707, 0x360404, 0x560a08],     // yerdeki leke (4. tur: biraz koyu ve kahveye yakın; eski 0x4e0606/0x5c0909/0x430404/0x6a0c0c)
@@ -521,24 +521,26 @@
     if (!AYAR.hasarSayisi) return;
     var ad = 'BarbarHasar';
     PIXI.BitmapFont.from(ad, { fontFamily: 'Arial', fontWeight: 'bold', fontSize: 26, fill: '#ffffff', stroke: '#1b1110', strokeThickness: 4 },
-      { chars: '0123456789−', resolution: 2 });
+      { chars: '0123456789−+,', resolution: 2 });
     var kapSayi = kap('hasarSayilari', ust);
-    // İlk yuva Bahtiyar için ayrılır, sekiz yuva düşmanlar arasında paylaşılır.
-    for (var i = 0; i < 9; i++) {
-      var yazi = new PIXI.BitmapText('0', { fontName: ad, fontSize: i === 0 ? 26 : 22, tint: i === 0 ? 0xff765e : 0xffe7bd });
+    // Bahtiyar'ın kaybı ve kazanımı ayrı yuvalarda, sekiz yuva düşmanlar arasında paylaşılır.
+    for (var i = 0; i < 10; i++) {
+      var tint = i === 0 ? 0xff765e : i === 1 ? 0x89f292 : 0xffe7bd;
+      var yazi = new PIXI.BitmapText('0', { fontName: ad, fontSize: i < 2 ? 26 : 22, tint: tint });
       yazi.anchor.set(0.5); yazi.visible = false;
       kapSayi.addChild(yazi);
       hasarSayilari.push({ yazi: yazi, bitis: -1, son: -1 });
     }
   }
 
-  function hasarSayisiGoster(hedef, miktar, gelen) {
+  function canSayisiGoster(hedef, miktar, tur) {
     if (!hasarSayilari.length || !hedef || !(miktar > 0) || !isFinite(miktar) || OYUN.durum !== 'oyun') return;
     var t = OYUN.zaman.gercekT;
-    var yuva = hasarSayilari[0];
-    if (!gelen) {
-      yuva = hasarSayilari[1];
-      for (var i = 1; i < hasarSayilari.length; i++) {
+    var gelen = tur === 'gelen', sifa = tur === 'sifa';
+    var yuva = hasarSayilari[sifa ? 1 : 0];
+    if (!gelen && !sifa) {
+      yuva = hasarSayilari[2];
+      for (var i = 2; i < hasarSayilari.length; i++) {
         var aday = hasarSayilari[i];
         if (aday.hedef === hedef && aday.id === hedef.id && aday.bitis > t) { yuva = aday; break; }
         if (aday.bitis < yuva.bitis) yuva = aday;
@@ -546,13 +548,16 @@
     }
     var birlesir = yuva.hedef === hedef && yuva.id === hedef.id && t - yuva.son <= HASAR_BIRLESIM && t < yuva.bitis;
     yuva.miktar = (birlesir ? yuva.miktar : 0) + miktar;
-    yuva.yazi.text = (gelen ? '−' : '') + Math.max(1, Math.round(yuva.miktar));
+    var sayi = sifa && yuva.miktar < 1
+      ? String(Math.max(.1, Math.round(yuva.miktar * 10) / 10)).replace('.', ',')
+      : Math.max(1, Math.round(yuva.miktar));
+    yuva.yazi.text = (gelen ? '−' : sifa ? '+' : '') + sayi;
     yuva.hedef = hedef; yuva.id = hedef.id; yuva.son = t; yuva.bitis = t + HASAR_SAYI_SURE;
     if (birlesir) return;
     var buyuk = !!hedef.devMi || hedef === window.VARGOR;
     yuva.basla = t;
-    var y = buyuk ? 178 : gelen ? 87 : 94;
-    yuva.x = hedef.x + (gelen ? 12 : buyuk ? 0 : ((hedef.id || 0) % 3 - 1) * 18);
+    var y = buyuk ? 178 : sifa ? 104 : gelen ? 87 : 94;
+    yuva.x = hedef.x + (sifa ? -24 : gelen ? 23 : buyuk ? 0 : ((hedef.id || 0) % 3 - 1) * 18);
     yuva.y = hedef.y - y;
   }
 
@@ -1302,7 +1307,7 @@
   }
   function onOyuncuHasar(v) {
     if (!kur()) return;
-    hasarSayisiGoster(window.OYUNCU, v.canKaybi, true);
+    canSayisiGoster(window.OYUNCU, v.canKaybi, 'gelen');
     if (v.yanma) { hasarDarbe = Math.max(hasarDarbe, 0.22); return; }   // ateş: kan yok, sarsıntı yok; yalnız ince kızıl kenar
     var m = v.miktar || 10;
     hasarDarbe = Math.min(1, 0.45 + m / 40);
@@ -2788,7 +2793,8 @@
     savur: onSavur, vurus: onVurus, olum: onOlum, blok: onBlok, sektir: onSektir, atil: onAtil, adim: onAdim,
     mermiVur: onMermiVur, ayazBuzKir: onAyazBuzKir, ayazBotBas: onAyazBotBas, ayazZincirKes: onAyazZincirKes, sifa: onSifa, devYereVur: onDevYereVur, devKaya: onDevKaya, devOldu: onDevOldu, skarnZeminTemas: onSkarnZeminTemas,
     oyuncuHasar: onOyuncuHasar,
-    dusmanHasar: function (v) { hasarSayisiGoster(v.hedef, v.miktar, false); }, atesYak: onAtesYak, atesSon: onAtesSon,
+    oyuncuIyilesti: function (v) { canSayisiGoster(window.OYUNCU, v.miktar, 'sifa'); },
+    dusmanHasar: function (v) { canSayisiGoster(v.hedef, v.miktar, 'giden'); }, atesYak: onAtesYak, atesSon: onAtesSon,
     tutus: function (v) { if (kur() && v.x !== undefined) { parla(P, D.yumusak, v.x, v.y - 40, 0xff7a20, 0.4, 1.4, 0.25, 0.7); for (var j = 0; j < 8; j++) kivilcim(v.x, v.y, 40, r(0, PI2), r(60, 180), 0xffa040, r(0.2, 0.4), 0.5, -0.1); } },
     devKukre: function () { if (kur()) { try { if (window.DEV && DEV.aktif) kukreDalga(DEV, 3); } catch (e) {} } }, arena: function (v) { arenaKapali = v.acik === false; }, oyuncuOldu: onOyuncuOldu, ofke: onOfke, kasirga: onKasirga, baltaAt: onBaltaAt, baltaDondu: onBaltaDondu,
     varilPatla: onVarilPatla, kozYan: onKozYan, totemKir: onTotemKir
