@@ -1993,8 +1993,9 @@
       var s = yansimalar[n++], mesale = f.tur === 'mesale';
       s.visible = true;
       s.position.set(f.agizX ?? f.x, f.y + 6);
-      s.scale.set(mesale ? .78 : 1.21, mesale ? 1.05 : .90);
-      s.alpha = (mesale ? .52 : .34) * (1 + (OYUN.grafik.isik === 2 ? .36 : .28 * OYUN.grafik.isik)) * atesTitresim(i, f.tur) * (.92 + .08 * Math.sin(gT * 3 + i));
+      var ust = OYUN.grafik.isik === 2;
+      s.scale.set(mesale ? (ust ? 1.18 : .78) : 1.21, mesale ? (ust ? 1.58 : 1.05) : .90);
+      s.alpha = (mesale ? .52 : .34) * (1 + (ust ? .68 : .28 * OYUN.grafik.isik)) * atesTitresim(i, f.tur) * (.92 + .08 * Math.sin(gT * 3 + i));
     }
     for (; n < yansimalar.length; n++) yansimalar[n].visible = false;
   }

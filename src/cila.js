@@ -214,6 +214,7 @@
       kap.addChild(ci); canliIzleri.push(ci);
     }
     for (var i = 0; i < HAVUZ; i++) { var s = new PIXI.Sprite(doku); s.anchor.set(0.5); s.visible = false; kap.addChild(s); golgeler.push(s); }
+    OYUN.app.renderer.on('prerender', zeminCizimOncesi);
     temas = new PIXI.Sprite(temasDoku); temas.anchor.set(0.5); temas.visible = false; kap.addChild(temas);   // en üstte
   }
   function mesaleSekmeleri() {
@@ -358,6 +359,61 @@
     [1.085, .012, .008, 0, .003, 0, 1.10, .021, 0, .009, 0, .018, 1.15, 0, .014, 0, 0, 0, 1, 0]
   ];
   var ISIK_SAYISI = 5, isikNoktalari = new Float32Array(ISIK_SAYISI * 4);
+  var alevNoktalari = new Float32Array(ISIK_SAYISI * 4);
+  var oyuncuYansimasi = null;
+  var suYansimaFragment = [
+    "precision highp float;",
+    "varying vec2 vTextureCoord;",
+    "uniform sampler2D uSampler;",
+    "uniform vec4 inputSize;",
+    "uniform vec4 outputFrame;",
+    "uniform vec4 inputClamp;",
+    "uniform float zaman;",
+    "uniform float ayak;",
+    "uniform float boy;",
+    "void main() {",
+    "  vec2 p = vTextureCoord * inputSize.xy;",
+    "  float u = max(0.0, (p.y + outputFrame.y - ayak) / boy);",
+    "  float kirik = sin(p.y * .72 - zaman * 9.0) * (.40 + u * 2.1);",
+    "  vec2 uv = clamp(vTextureCoord + vec2(kirik,0.0) * inputSize.zw,inputClamp.xy,inputClamp.zw);",
+    "  vec4 resim = texture2D(uSampler, uv);",
+    "  float tas = .75 + .25 * sin(p.y * 1.42 + sin(p.x * .34 + zaman * 1.4));",
+    "  float sonda = 1.0 - smoothstep(.39,1.08,u);",
+    "  resim.rgb = resim.rgb * vec3(.82,.90,1.08) + resim.a * vec3(.036,.046,.067);",
+    "  gl_FragColor = resim * tas * sonda * step(.01, u);",
+    "}"
+  ].join("\n");
+  function islakOyuncuYansimasi() {
+    var oyuncu = window.OYUNCU;
+    var govde = oyuncu && oyuncu.sprite, resim = govde && govde.g;
+    var renderer = OYUN.app.renderer;
+    if (OYUN.bolum !== 1 || OYUN.grafik.isik !== 2 || !renderer.gl ||
+        !oyuncu || !oyuncu.canli || !resim || !resim.visible || govde.yerTutucu) {
+      if (oyuncuYansimasi) oyuncuYansimasi.visible = false;
+      return;
+    }
+    if (!oyuncuYansimasi) {
+      oyuncuYansimasi = new PIXI.Sprite();
+      oyuncuYansimasi.name = 'islak_oyuncu_yansimasi';
+      var suFiltre = new PIXI.Filter(undefined, suYansimaFragment, { zaman: 0, ayak: 0, boy: 1 });
+      suFiltre.padding = 4;
+      oyuncuYansimasi.filters = [suFiltre];
+      var katman = OYUN.katman;
+      katman.kamera.addChildAt(oyuncuYansimasi, katman.kamera.getChildIndex(katman.leke));
+    }
+    var yansi = oyuncuYansimasi, z = OYUN.yakinlik;
+    if (yansi.texture !== resim.texture) yansi.texture = resim.texture;
+    yansi.anchor.copyFrom(resim.anchor);
+    yansi.position.set(govde.x + resim.x * govde.scale.x, govde.y - resim.y * govde.scale.y * .86 + 2);
+    yansi.scale.set(resim.scale.x * govde.scale.x, -resim.scale.y * govde.scale.y * .86);
+    yansi.alpha = .76 * govde.alpha;
+    yansi.visible = true;
+    var filtre = yansi.filters[0], kamera = OYUN.katman.kamera, kok = OYUN.app.stage;
+    filtre.resolution = renderer.resolution;
+    filtre.uniforms.zaman = zaman % 120;
+    filtre.uniforms.ayak = kok.y + kamera.y + (govde.y + 1) * z;
+    filtre.uniforms.boy = Math.max(24, govde.boy * .90 * z);
+  }
   var yansimaFragment = [
     "precision highp float;",
     "varying vec2 vTextureCoord;",
@@ -366,7 +422,10 @@
     "uniform vec4 outputFrame;",
     "uniform vec4 inputClamp;",
     "uniform vec4 isikNoktalari[5];",
+    "uniform vec4 alevNoktalari[5];",
     "uniform float zaman;",
+    "uniform float odak;",
+    "uniform float alanGucu;",
     "uniform vec3 tonKirmizi;",
     "uniform vec3 tonYesil;",
     "uniform vec3 tonMavi;",
@@ -376,10 +435,15 @@
     "  vec2 px = vTextureCoord * inputSize.xy;",
     "  vec2 sapma = vec2(0.0);",
     "  vec3 yansima = vec3(0.0);",
+    "  vec3 hale = vec3(0.0);",
     "  vec3 renk = bolum < 1.5 ? vec3(1.0, 0.53, 0.28) : bolum < 2.5 ? vec3(1.0, 0.27, 0.07) : vec3(0.60, 0.76, 1.0);",
     "  for (int i = 0; i < 5; ++i) {",
     "    vec4 l = isikNoktalari[i];",
     "    if (l.w <= 0.0) continue;",
+    "    vec4 alev = alevNoktalari[i];",
+    "    vec2 a = (px - alev.xy) / vec2(alev.z, alev.z * .82);",
+    "    float orbe = 1.0 - smoothstep(0.0, 1.0, dot(a,a));",
+    "    hale += vec3(1.0,.50,.20) * orbe * orbe * alev.w;",
     "    vec2 q = (px - l.xy) / vec2(l.z, l.z * 0.72);",
     "    float r = dot(q,q);",
     "    if (r > 1.0) continue;",
@@ -392,10 +456,27 @@
     "      float serpinti = .42 + .58 * pow(.5 + .5 * sin(px.y * .16 - zaman * 1.3), 4.0);",
     "      float koridor = exp(-abs(q.x + q.y * .16) * 4.5) * smoothstep(-.4,.3,q.y);",
     "      yansima += renk * etki * (.10 + koridor * (.28 + bant * .46) * serpinti);",
+    "      if (bolum < 1.5 && alev.w > .1 && q.y > -.03) {",
+    "        float iz = exp(-abs(q.x + .034 * sin(px.y * .14 - zaman * 4.0)) * 11.5);",
+    "        float titrek = .27 + .73 * pow(.5 + .5 * sin(px.y * .51 + zaman * 3.0 + sin(px.x * .16)), 3.0);",
+    "        yansima += vec3(1.0,.61,.26) * iz * etki * (.22 + titrek * .89);",
+    "      }",
     "    }",
     "  }",
-    "  vec4 c = texture2D(uSampler, clamp(vTextureCoord + sapma * inputSize.zw, inputClamp.xy, inputClamp.zw));",
-    "  c.rgb = vec3(dot(c.rgb,tonKirmizi),dot(c.rgb,tonYesil),dot(c.rgb,tonMavi)) + (tonKayma + min(yansima,vec3(.27))) * c.a;",
+    "  vec2 uv = clamp(vTextureCoord + sapma * inputSize.zw,inputClamp.xy,inputClamp.zw);",
+    "  vec4 c = texture2D(uSampler, uv);",
+    "  float dy = abs(px.y - odak) / max(1.0,outputFrame.w);",
+    "  float alan = smoothstep(.23,.59,dy);",
+    "  if (alan > .01) {",
+    "    vec2 d = inputSize.zw * (1.8 + 2.9 * alan);",
+    "    vec4 yumusak = texture2D(uSampler,clamp(uv + vec2(d.x,d.y),inputClamp.xy,inputClamp.zw));",
+    "    yumusak += texture2D(uSampler,clamp(uv - vec2(d.x,d.y),inputClamp.xy,inputClamp.zw));",
+    "    yumusak += texture2D(uSampler,clamp(uv + vec2(d.x,-d.y),inputClamp.xy,inputClamp.zw));",
+    "    yumusak += texture2D(uSampler,clamp(uv + vec2(-d.x,d.y),inputClamp.xy,inputClamp.zw));",
+    "    c = mix(c, yumusak * .25, min(1.0, alan * alanGucu));",
+    "  }",
+    "  c.rgb = vec3(dot(c.rgb,tonKirmizi),dot(c.rgb,tonYesil),dot(c.rgb,tonMavi)) + (tonKayma + min(yansima,vec3(.44))) * c.a;",
+    "  c.rgb += (1.0 - min(c.rgb,vec3(1.0))) * min(hale,vec3(.46)) * c.a;",
     "  float mesafe = 1.0 - smoothstep(0.0,.70,px.y / max(1.0,outputFrame.w));",
     "  vec3 perde = bolum < 2.5 ? vec3(.79,.92,1.15) : vec3(.83,.99,1.14);",
     "  c.rgb *= mix(vec3(1.0), perde, mesafe * .22);",
@@ -424,7 +505,7 @@
     if (kalite === 2) {
       if (!yansimaFiltre) {
         yansimaFiltre = new PIXI.Filter(undefined, yansimaFragment, {
-          isikNoktalari: isikNoktalari, zaman: 0, bolum: 0,
+          isikNoktalari: isikNoktalari, alevNoktalari: alevNoktalari, zaman: 0, odak: 0, alanGucu: .64, bolum: 0,
           tonKirmizi: new Float32Array(3), tonYesil: new Float32Array(3),
           tonMavi: new Float32Array(3), tonKayma: new Float32Array(3)
         });
@@ -440,13 +521,28 @@
         u.tonKayma.set([m[4],m[9],m[14]]);
       }
       isikNoktalari.fill(0);
+      alevNoktalari.fill(0);
       var atesler = window.BOLUM && BOLUM.atesler;
       var z = OYUN.yakinlik, saya = 0;
+      var kamera = OYUN.katman.kamera, kok = OYUN.app.stage;
+      var sol = kok.x + kamera.x, ust = kok.y + kamera.y;
+      var oyuncu = window.OYUNCU;
+      var ekranBoyu = renderer.screen.height;
+      yansimaFiltre.uniforms.odak = oyuncu
+        ? Math.min(ekranBoyu * .74, Math.max(ekranBoyu * .32, ust + oyuncu.y * z))
+        : ekranBoyu * .5;
       if (atesler) for (var i = 0; i < atesler.length && saya < isikNoktalari.length; i++) {
         var f = atesler[i];
         if (!f || f.x < V.x - 120 || f.x > V.x + V.w + 120 || f.y < V.y - 120 || f.y > V.y + V.h + 120) continue;
-        isikNoktalari[saya++] = (f.x - V.x) * z;
-        isikNoktalari[saya++] = (f.y - V.y + (tonBolumu === 2 ? 10 : 38)) * z;
+        var x = sol + (f.agizX ?? f.x) * z;
+        var y = ust + f.y * z;
+        var guc = Math.max(.35, Math.min(1.0, (f.guc || 1) * .7));
+        alevNoktalari[saya] = x;
+        alevNoktalari[saya + 1] = ust + (f.agizY ?? (f.y - (f.tur === 'mesale' ? 45 : 14))) * z;
+        alevNoktalari[saya + 2] = (f.tur === 'mesale' ? 123 : 160) * z;
+        alevNoktalari[saya + 3] = guc * (f.tur === 'mesale' ? .78 : .49) * (.93 + .07 * Math.sin(zaman * 9 + i));
+        isikNoktalari[saya++] = x;
+        isikNoktalari[saya++] = y + (tonBolumu === 2 ? 10 : 30) * z;
         isikNoktalari[saya++] = (tonBolumu === 2 ? 154 : 182) * z;
         isikNoktalari[saya++] = Math.min(.84, Math.max(.35, (f.guc || 1) * .62));
       }
@@ -455,13 +551,18 @@
     if (etkinFiltreler !== filtreler) { zemin.filters = filtreler; etkinFiltreler = filtreler; }
   }
 
+  function zeminCizimOncesi() {
+    if (!OYUN.basladi) return;
+    zeminRenkDuzenle(gorD());
+    islakOyuncuYansimasi();
+  }
+
   function herKare(gd) {
     if (!kap) return;
     var dt = Math.min(0.1, gd || 0.016);
     zaman += dt;
     var V = gorD(), profil = GOLGE_PROFILLERI[OYUN.grafik.golge];
     var yon = profil[OYUN.bolum - 1] || profil[0];
-    zeminRenkDuzenle(V);
     try { mesaleSekmeleri(); } catch (e) {}
     ayazArenaIsigi(V);
     dekorGolgeleri(V, yon);
@@ -562,6 +663,7 @@
   }
   OYUN.sistem('cila', { baslat: kur, herKare: herKare, sifirla: function () {
     zaman = 0; vargorAlfa = 1;
+    if (oyuncuYansimasi) oyuncuYansimasi.visible = false;
     kalanIzleriGizle(golgeler, 0);
     kalanIzleriGizle(canliIzleri, 0);
     kalanIzleriGizle(dekorGolge, 0);
