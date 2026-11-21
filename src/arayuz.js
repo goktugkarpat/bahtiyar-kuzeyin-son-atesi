@@ -212,6 +212,26 @@
     });
     return p;
   }
+  var grafikSecenekleri = [];
+  function grafikPaneli(ebeveyn) {
+    var p = $('div', 'ar-panel ar-acilir gizli', ebeveyn);
+    $('h3', '', p, 'GRAFİK');
+    var secenekler = $('div', 'ar-grafik-olcek', p);
+    secenekler.setAttribute('role', 'group');
+    secenekler.setAttribute('aria-label', 'Render çözünürlüğü');
+    $('span', '', secenekler, 'Render çözünürlüğü');
+    [1, 1.25].forEach(function (olcek) {
+      var b = dugme(secenekler, olcek.toFixed(2) + '×', function () {
+        OYUN.cizimOlcegiYap(olcek);
+        grafikSecenekleri.forEach(function (guncelle) { guncelle(); });
+      }, 'kucuk');
+      function guncelle() {
+        b.setAttribute('aria-pressed', String(OYUN.cizimOlcegi() === olcek));
+      }
+      guncelle(); grafikSecenekleri.push(guncelle);
+    });
+    return p;
+  }
   function acKapa(panel, digerleri) {
     var ac = panel.classList.contains('gizli');
     digerleri.forEach(function (d) { panelAcikYap(d, false); });
@@ -406,16 +426,18 @@
       '</svg><span>BAHTİYAR</span>');
     $('div', 'ar-alt-ad', bu, 'Kuzeyin Son Ateşi');
     var m = $('div', 'ar-menu', b);
-    var bKontrol, bSes;
+    var bKontrol, bSes, bGrafik;
     bBasla = dugme(m, 'BAŞLA', basla, 'ana');
     el.baslaHata = $('p', 'ar-ipucu-alt gizli', m, 'Bölüm yüklenemedi. Tekrar deneyebilirsin.');
     el.baslaHata.setAttribute('role', 'alert');
     hazirIzle();
     var mk = $('div', 'ar-menu-yan', m);
-    dugme(mk, 'KONTROLLER', function () { acKapa(bKontrol, [bSes]); }, 'kucuk');
-    dugme(mk, 'SES', function () { acKapa(bSes, [bKontrol]); }, 'kucuk');
-    bKontrol = kontrolPaneli(b); bSes = sesPaneli(b);
-    perdeler.baslik._paneller = [bKontrol, bSes];
+    dugme(mk, 'KONTROLLER', function () { acKapa(bKontrol, [bSes, bGrafik]); }, 'kucuk');
+    dugme(mk, 'SES', function () { acKapa(bSes, [bKontrol, bGrafik]); }, 'kucuk');
+    var bGrafikDugme = dugme(mk, 'GRAFİK', function () { acKapa(bGrafik, [bKontrol, bSes]); }, 'kucuk');
+    bKontrol = kontrolPaneli(b); bSes = sesPaneli(b); bGrafik = grafikPaneli(b);
+    panelDugmesi(bGrafik, bGrafikDugme, 'ar-baslik-grafik');
+    perdeler.baslik._paneller = [bKontrol, bSes, bGrafik];
     $('div', 'ar-ipucu-alt', b, 'Başlamak için ' + tus('Enter', true));
 
     /* mola */
@@ -427,17 +449,19 @@
     $('h2', 'ar-baslik-yazi', molaUst, 'Mola').id = 'ar-mola-baslik';
     $('div', 'ar-kilic', molaUst, SVG.kilic).setAttribute('aria-hidden', 'true');
     var molaGovde = $('div', 'ar-mola-govde', molaKart);
-    var pm = $('div', 'ar-menu ar-mola-menu', molaGovde), mKontrol, mSes;
+    var pm = $('div', 'ar-menu ar-mola-menu', molaGovde), mKontrol, mSes, mGrafik;
     dugme(pm, 'DEVAM ET', function () { durumYap('oyun'); }, 'ana');
     dugme(pm, 'BÖLÜMÜ YENİDEN BAŞLAT', yenidenBasla);
     dugme(pm, 'OYUNUN BAŞINA DÖN', function () { el.baslangicOnayi.showModal(); });
     var molaSekmeler = $('div', 'ar-mola-sekmeler', pm);
-    var molaKontrolDugme = dugme(molaSekmeler, 'KONTROLLER', function () { acKapa(mKontrol, [mSes]); }, 'kucuk');
-    var molaSesDugme = dugme(molaSekmeler, 'SES', function () { acKapa(mSes, [mKontrol]); }, 'kucuk');
-    mKontrol = kontrolPaneli(molaGovde); mSes = sesPaneli(molaGovde);
+    var molaKontrolDugme = dugme(molaSekmeler, 'KONTROLLER', function () { acKapa(mKontrol, [mSes, mGrafik]); }, 'kucuk');
+    var molaSesDugme = dugme(molaSekmeler, 'SES', function () { acKapa(mSes, [mKontrol, mGrafik]); }, 'kucuk');
+    var molaGrafikDugme = dugme(molaSekmeler, 'GRAFİK', function () { acKapa(mGrafik, [mKontrol, mSes]); }, 'kucuk');
+    mKontrol = kontrolPaneli(molaGovde); mSes = sesPaneli(molaGovde); mGrafik = grafikPaneli(molaGovde);
     panelDugmesi(mKontrol, molaKontrolDugme, 'ar-mola-kontrol');
     panelDugmesi(mSes, molaSesDugme, 'ar-mola-ses');
-    perdeler.mola._paneller = [mKontrol, mSes];
+    panelDugmesi(mGrafik, molaGrafikDugme, 'ar-mola-grafik');
+    perdeler.mola._paneller = [mKontrol, mSes, mGrafik];
 
     el.baslangicOnayi = $('dialog', 'ar-baslangic-onay', kok.parentNode);
     el.baslangicOnayi.setAttribute('aria-labelledby', 'ar-baslangic-baslik');

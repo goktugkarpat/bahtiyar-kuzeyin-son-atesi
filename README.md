@@ -44,6 +44,8 @@ Bahtiyar, sağanak altındaki Yanık Köy’de kayıp bir kafilenin izini bulur.
 | Esc | Mola |
 | Shift + F | Çözünürlük ve FPS göstergesini aç veya kapat |
 
+Başlık ve mola ekranındaki **Grafik** menüsünden render çözünürlüğünü **1.00×** ya da **1.25×** seçebilirsin.
+
 ### Dövüş ve öfke
 
 - Baltayı fırlattıktan sonra aynı tuşla geri çağır. Geri dönerken yolundaki düşmanlara da vurur. Kalkanlılara yandan yaklaşabilir veya ağır savurmayla savunmalarını açabilirsin.
