@@ -189,7 +189,8 @@ body.d-oyun, body.d-oyun #sahne, body.d-oyun canvas {
 }
 .ar-baslik-ust { margin-top: 50px; display: flex; flex-direction: column; align-items: center; position: relative; z-index: 1; }
 .ar-perde.baslik .ar-menu { position: absolute; left: 0; right: 0; bottom: 52px; z-index: 1; }
-.ar-perde.baslik .ar-dugme.ana { width: 264px; min-width: 0; padding: 11px 16px 10px; font-size: 23px; margin: 4px auto 6px; animation: ar-yuksel .7s cubic-bezier(.2,.8,.3,1) .55s both; }
+.ar-perde.baslik .ar-dugme.ana { width: 264px; min-width: 0; padding: 11px 16px 10px; font-size: 23px; line-height: 28px; white-space: nowrap; margin: 4px auto 6px; animation: ar-yuksel .7s cubic-bezier(.2,.8,.3,1) .55s both; }
+.ar-perde.baslik .ar-dugme.ana.bekle { font-size: 20px; letter-spacing: .07em; }
 .ar-menu-yan { display: flex; gap: 14px; justify-content: center; animation: ar-yuksel .7s cubic-bezier(.2,.8,.3,1) .7s both; }
 .ar-menu-yan .ar-dugme { margin: 4px 0; }
 @keyframes ar-yuksel { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }

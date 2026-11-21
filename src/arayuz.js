@@ -551,7 +551,7 @@
   function hazirGuncelle() {
     var y = O() && O().onYukleme, h = hazirMi();
     if (bBasla) {
-      var yz = h ? 'BAŞLA' : 'YÜKLENİYOR  %' + (y && y.toplam ? Math.round(y.biten / y.toplam * 100) : 0);
+      var yz = h ? 'BAŞLA' : 'YÜKLENİYOR %' + (y && y.toplam ? Math.round(y.biten / y.toplam * 100) : 0);
       if (bBasla.textContent !== yz) bBasla.textContent = yz;
       bBasla.classList.toggle('bekle', !h);
     }
