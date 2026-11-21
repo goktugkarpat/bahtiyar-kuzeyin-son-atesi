@@ -74,7 +74,7 @@
   };
   var DALGALAR_2 = [
     // --- Yanık demir maden girişi
-    { ad: 'Maden girişi', tetik: 8140, g: [['goblin', 3, 'ust', 0, 0.7], ['baskinci', 2, 'yan', 1.8, 0.7]] },
+    { ad: 'Maden girişi', tetik: 8140, g: [['okcu', 1, 'ust', 0, 0], ['goblin', 2, 'ust', 1.0, 0.7], ['baskinci', 2, 'yan', 2.8, 0.7]] },
     { ad: 'Öncü akıncılar', tetik: 7800, g: [['baskinci', 3, 'ust', 0, 0.6], ['okcu', 2, 'ust', 1.4, 0.8]] },
     { ad: 'Demir zırhlılar', tetik: 7450, g: [['infazci', 1, 'orta', 0, 0], ['goblin', 4, 'arka', 1.8, 0.4]] },
     { ad: 'Kül şamanı', tetik: 7100, g: [['saman', 1, 'ust', 0, 0], ['baskinci', 3, 'yan', 0.8, 0.55], ['goblin', 4, 'ust', 1.6, 0.35]] },
@@ -105,7 +105,7 @@
     kule_yolu: { kamY: 1160, ad: 'Kule Kapısı' }
   };
   var DALGALAR_3 = [
-    { ad: 'Tipideki izler', tetik: 8190, g: [['kircil_kurt', 4, 'yan', 0, .84], ['goblin', 2, 'ust', 1.9, .6]] },
+    { ad: 'Tipideki izler', tetik: 8190, g: [['kircil_kurt', 4, 'yan', 0, .46], ['goblin', 2, 'ust', 2.3, .6]] },
     { ad: 'Buz sırtı', tetik: 7800, g: [['ayaz_mizrak', 2, 'yan', 0, 1.35], ['kircil_kurt', 2, 'ust', 1, .8]] },
     { ad: 'Donmuş Boğaz I', arena: 'bugaz', g: [['ayaz_mizrak', 2, 'yan', 0, 1.3], ['kircil_kurt', 4, 'arka', 1.2, .53]] },
     { ad: 'Donmuş Boğaz II', arena: 'bugaz', nefes: 2.2, g: [['ayaz_zincir', 2, 'yan', .25, 1.3], ['kircil_kurt', 4, 'arka', .8, .70]] },

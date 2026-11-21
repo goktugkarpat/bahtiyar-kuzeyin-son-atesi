@@ -13,12 +13,12 @@ Bahtiyar, sağanak altındaki Yanık Köy’de kayıp bir kafilenin izini bulur.
 | Bölüm | Ortam | Bölüm sonu düşmanı |
 |---|---|---|
 | I. Yanık Köy | Sağanak altında harabeler, yıkık kilise ve Kemik Çukuru | Gormagul |
-| II. Kül Geçidi | Kızıl kül, maden ocakları ve Lav Köprüsü. Kasırga burada açılır. | Vargor |
-| III. Ayaz Hisarı | Tipi, zincirli tutsaklar ve kuzey ordusunun işaret kulesi | Skarn |
+| II. Kül Geçidi | Kızıl kül, maden ocakları ve Lav Köprüsü. Balta Atışı ve geri çağırma açılır. | Vargor |
+| III. Ayaz Hisarı | Tipi, zincirli tutsaklar ve kuzey ordusunun işaret kulesi. Kasırga ve Savaş Öfkesi açılır. | Skarn |
 
 | | |
 |---|---|
-| ![Yanık Köy’de sağanak ve yıkıntılar](ekran/yanik-koy.jpg) | ![Kül Geçidi’nde Kasırga ile maden ovasında savaş](ekran/kul-gecidi.jpg) |
+| ![Yanık Köy’de sağanak ve yıkıntılar](ekran/yanik-koy.jpg) | ![Kül Geçidi’nde maden ovasında savaş](ekran/kul-gecidi.jpg) |
 
 ![Ayaz Hisarı’nda kar, meşaleler ve kaya gölgeleri](ekran/ayaz-hisari.jpg)
 
@@ -49,7 +49,8 @@ Başlık ve mola ekranındaki **Grafik** menüsünde iki seçenek bulunur. **Tem
 ### Dövüş ve öfke
 
 - Baltayı fırlattıktan sonra aynı tuşla geri çağır. Geri dönerken yolundaki düşmanlara da vurur. Kalkanlılara yandan yaklaşabilir veya ağır savurmayla savunmalarını açabilirsin.
-- İsabet aldığında veya vurduğunda öfke birikir. **Savaş Öfkesi** tam dolu çubuğu kullanır. İkinci bölümde açılan **Kasırga**, X’i basılı tuttuğun sürece aynı çubuktan harcar. Dönerken hareket edebilirsin.
+- Yanık Köy’de savur ve atıl. Kül Geçidi’nde baltayı fırlatıp geri çağırabilir ve ağır vuruş yapabilirsin.
+- Ayaz Hisarı’nda isabet aldığında veya vurduğunda öfke birikir. **Savaş Öfkesi** tam dolu çubuğu kullanır. Üçüncü bölümde açılan **Kasırga**, X’i basılı tuttuğun sürece aynı çubuktan harcar. Dönerken hareket edebilirsin.
 - Şifa iksirleri düşmanlardan çıkar. Lav ve ateş alanlarının kenarından dolaş. Bölüm sonu düşmanını yenince sonuç ekranından sonraki bölüme geç.
 - Mola menüsünden bulunduğun bölümü yeniden başlatabilir veya onay verip Yanık Köy’e dönebilirsin. Ana ses, efekt ve müzik ayrı ayarlanır.
 

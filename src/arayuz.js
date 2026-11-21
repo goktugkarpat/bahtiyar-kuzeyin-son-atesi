@@ -93,11 +93,11 @@
   var SAVUR_TUS, BALTA_TUS, tusPanelleri = [], baglantiYazilari = [], tusSecimi = null;
   var KONTROLLER = [
     ['yukari', 'Yukarı yürü'], ['o', 'Balta savur'],
-    ['sola', 'Sola yürü'], ['p', 'Baltayı fırlat / geri çağır'],
-    ['asagi', 'Aşağı yürü'], ['g', 'Ağır vuruş'],
+    ['sola', 'Sola yürü'], ['p', 'Baltayı fırlat / geri çağır · II. bölüm'],
+    ['asagi', 'Aşağı yürü'], ['g', 'Ağır vuruş · II. bölüm'],
     ['saga', 'Sağa yürü'], ['bosluk', 'Atıl'],
-    ['esc', 'Molayı aç / kapat'], ['e', 'Savaş Öfkesi'],
-    ['r', 'Yeniden oyna'], ['x', 'Kasırga (basılı tut)']
+    ['esc', 'Molayı aç / kapat'], ['e', 'Savaş Öfkesi · III. bölüm'],
+    ['r', 'Yeniden oyna'], ['x', 'Kasırga · III. bölüm (basılı tut)']
   ];
   var TUS_ATAMA_IPUCU = 'Bir eyleme tıkla, ardından yeni tuşa bas.';
   function tusSeciminiKapat() {
@@ -182,7 +182,7 @@
     ofkeTusu.setAttribute('font-size', ofkeAdi.length > 1 ? '8' : '18');
     el.ofke.title = 'Savaş Öfkesi · ' + ofkeAdi + ' · 100 öfke';
     el.kasirga.title = 'Kasırga · ' + etiketAdi('x') + ' tuşunu basılı tutarak öfke harca';
-    el.hikayeYetenek.innerHTML = ipucuMetinleri().kasirga;
+    hikayeYetenekYaz(aktifBolum());
     if (ipucu?.aktif) el.ipucu.innerHTML = '<span class="ic">' + ipucuMetinleri()[ipucu.aktif] + '</span>';
     zaferHazirla();
   }
@@ -348,7 +348,7 @@
       '<span class="kenet sol">' + IKON.kenet + '</span><span class="kenet sag">' + IKON.kenet + '</span>');
     el.canIz = el.can.querySelector('.iz'); el.canDolu = el.can.querySelector('.dolu'); el.canSayi = el.can.querySelector('.sayi');
     // öfke: kor şeridi
-    el.ofke = $('div', 'ar-ofke', el.solAlt,
+    el.ofke = $('div', 'ar-ofke gizli', el.solAlt,
       '<svg class="alt" viewBox="0 0 310 28"><path d="M4 3L105 1.4 306 2.6 308.5 14 305 26.4 164 27 3 25.8 1.2 14z" fill="#2e2622" stroke="#000" stroke-width="2.2" stroke-linejoin="round"/></svg>' +
       '<div class="kanal"><i class="dolu"><i class="alev"></i></i></div><span class="ad">ÖFKE</span><b class="sayi">0</b><div class="yz"><span class="ad">ÖFKE</span><b class="sayi">0</b></div>' +
       '<svg class="ust" viewBox="0 0 310 28"><path d="M12 6.2L125 5.6 297 6.6v15L143 22.4 12 21.8z" fill="none" stroke="#000" stroke-width="2.6" stroke-linejoin="round"/>' +
@@ -365,7 +365,7 @@
       return $('div', 'ar-rozet ' + sinif, rz, '<div class="tas">' + PLAKA + (ek || '') + '<span class="tg-yer">' + tus + '</span>' + ikon + '</div><small>' + yazi + '</small>');
     }
     el.savur = rozet('savur', IKON.savur, SAVUR_TUS, 'savur');
-    el.balta = rozet('balta', IKON.balta, BALTA_TUS, 'fırlat', '<b class="yok-damga">YOK</b>' + IKON.cagir);   // balta dışarıdayken: dönen ok + "çağır"
+    el.balta = rozet('balta gizli', IKON.balta, BALTA_TUS, 'fırlat', '<b class="yok-damga">YOK</b>' + IKON.cagir);   // balta dışarıdayken: dönen ok + "çağır"
     el.baltaYazi = el.balta.querySelector('small');
     el.atil = rozet('atil', IKON.atil, IKON.bosluk, 'atıl', '<i class="bekle"></i>');
     el.atilBekle = el.atil.querySelector('.bekle');
@@ -387,7 +387,7 @@
     el.hikayeBaslik = el.hikaye.querySelector('.ar-hikaye-baslik');
     el.hikayeMetin = el.hikaye.querySelector('.ar-hikaye-metin');
     el.hikayeYetenek = el.hikaye.querySelector('.ar-hikaye-yetenek');
-    el.hikayeYetenek.innerHTML = ipucuMetinleri().kasirga;
+    hikayeYetenekYaz(aktifBolum());
     el.hikayeKart.addEventListener('click', function (e) {
       if (!hikayeAcik || performance.now() - hikayeAcilmaT < 250) return;
       e.stopPropagation();
@@ -588,6 +588,11 @@
     if (O() && O().yenidenBasla) O().yenidenBasla(); else durumYap('oyun');
   }
 
+  function hikayeYetenekYaz(no) {
+    var acilis = no === 2 ? ipucuMetinleri().baltaAcildi : no === 3 ? ipucuMetinleri().ofkeAcildi : '';
+    el.hikayeYetenek.innerHTML = acilis;
+    el.hikayeYetenek.classList.toggle('gizli', !acilis);
+  }
   function hikayeGoster(no) {
     if (O() && O().atla) return;
     no = bolumNo(no);
@@ -597,7 +602,7 @@
     clearTimeout(hikayeKapatZ); hikayeKapatZ = 0;
     el.hikayeBaslik.textContent = h.baslik;
     el.hikayeMetin.textContent = h.metin;
-    el.hikayeYetenek.classList.toggle('gizli', no !== 2);
+    hikayeYetenekYaz(no);
     hikayeAcik = true; hikayeSoluyor = false;
     hikayeX = window.OYUNCU?.x ?? 0;
     hikayeY = window.OYUNCU?.y ?? 0;
@@ -692,7 +697,7 @@
     if (el.seri) el.seri.className = 'ar-seri';
     // uzun ipuçları yalnız ilk karşılaşmada: görülen/yapılan bir daha çıkmaz (yeniden başlayınca da)
     ipucu = {
-      t: 0, sira: ['yuru', 'savur', 'atil', 'balta'], aktif: null, aktifT: 0, yapildi: ipucuGorulen, kuyruk: [], gosterildi: ipucuGorulen, bekle: 1.2, sonKontrol: 0
+      t: 0, sira: ['yuru', 'savur', 'atil'], aktif: null, aktifT: 0, yapildi: ipucuGorulen, kuyruk: [], gosterildi: ipucuGorulen, bekle: 1.2, sonKontrol: 0
     };
     son = {};
     if (el.ipucu) { el.ipucu.className = 'ar-ipucu'; }
@@ -712,7 +717,9 @@
     atil: atananTus('bosluk') + ' atıl',
     balta: BALTA_TUS + ' baltayı fırlat — dönene dek savuramazsın',
     ok: SAVUR_TUS + ' savurarak okları geri gönder',
-    kalkan: 'Kalkanlıyı yandan vur ya da ' + BALTA_TUS + ' balta at',
+    kalkan: 'Kalkanlıyı yandan vur',
+    baltaAcildi: 'Balta Atışı açıldı · ' + BALTA_TUS + ' ile fırlat ve geri çağır',
+    ofkeAcildi: 'Kasırga ve Savaş Öfkesi açıldı · ' + atananTus('x') + ' basılı tut · ' + atananTus('e') + ' tam öfke',
     cagir: BALTA_TUS + ' baltayı geri çağır — dönüşte yolundakileri biçer',
     ofke: 'Savaş Öfkesi hazır · ' + atananTus('e'),
     kasirga: 'Kasırga açıldı · ' + atananTus('x') + ' tuşunu basılı tut ve hareket et',
@@ -962,6 +969,16 @@
       var cs = Math.ceil(c);
       if (cs !== son.canSayi) { el.canSayi.textContent = cs; son.canSayi = cs; }
 
+      var ofkeAcik = P.yetenekAcik('ofke');
+      if (ofkeAcik !== son.ofkeAcik) {
+        el.ofke.classList.toggle('gizli', !ofkeAcik);
+        son.ofkeAcik = ofkeAcik;
+      }
+      var baltaAcik = P.yetenekAcik('balta');
+      if (baltaAcik !== son.baltaAcik) {
+        el.balta.classList.toggle('gizli', !baltaAcik);
+        son.baltaAcik = baltaAcik;
+      }
       var of = yuzde(Math.max(0, Math.min(100, P.ofke || 0)) / 100);
       if (of !== son.ofke) {
         var ofkePiksel = (of * 285).toFixed(1) + 'px';
@@ -976,7 +993,7 @@
         el.ofke.classList.toggle('aktif', ofDurum === 'aktif');
         el.ofke.classList.toggle('hazir', ofDurum === 'hazir');
         son.ofDurum = ofDurum;
-        if (ofDurum === 'hazir') ipucuIste('ofke');
+        if (ofkeAcik && ofDurum === 'hazir') ipucuIste('ofke');
         if (ofDurum === 'hazir') tekrarAnim(el.ofke, 'cagri');
       }
       // öfke açıkken geri sayım (tam saniye; yalnız değişince yazılır)
@@ -985,7 +1002,7 @@
         if (gs !== son.ofGeri) { el.ofkeGeri.textContent = gs; son.ofGeri = gs; if (gs <= 2) tekrarAnim(el.ofkeGeri, 'tik'); }
       } else son.ofGeri = null;
       var bv = P.baltaVar !== false;
-      var kasirgaAcik = aktifBolum() >= 2;
+      var kasirgaAcik = P.yetenekAcik('kasirga');
       var kasirgaHazir = kasirgaAcik && P.ofke > 0 && !P.ofkeli && bv;
       var kasirgaDurum = kasirgaAcik ? (kasirgaHazir ? 'hazir' : 'bekle') : 'kapali';
       if (kasirgaDurum !== son.kasirga) {
@@ -1149,7 +1166,8 @@
       istSifirla();
       guncelleGuvenli(0);
       hikayeKontrol();
-      if (aktifBolum() === 2 && !hikayeGorulen[2]) ipucuIste('kasirga');
+      if (aktifBolum() === 2) ipucuIste('balta');
+      else if (aktifBolum() === 3) ipucuIste('kasirga');
     }
     if (d === 'oldu') {
       var B = window.BOLUM; if (B && typeof B.ilerleme === 'number') ist.ilerleme = Math.max(ist.ilerleme, B.ilerleme);

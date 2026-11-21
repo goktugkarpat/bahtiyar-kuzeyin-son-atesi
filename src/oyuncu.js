@@ -170,6 +170,8 @@
     S.oto.gorulen = new Map();
   }
   iciSifirla();
+  var YETENEK_BOLUMU = { balta: 2, agir: 2, kasirga: 3, ofke: 3 };
+  P.yetenekAcik = function (ad) { return OYUN.bolum >= YETENEK_BOLUMU[ad]; };
   P._ic = function () { return S; };   // test/ölçüm için
 
   // ---------------------------------------------------------------- girdi (gerçek ya da ?oto)
@@ -367,7 +369,7 @@
       if (hz && tm < tr && farkEt(td)) { tehdit = td; break; }
     }
     if (mer && !farkEt(mer)) mer = null;
-    if (P.ofke >= 100 && (en || hedefTotem)) g.ofke = true;
+    if (P.yetenekAcik('ofke') && P.ofke >= 100 && (en || hedefTotem)) g.ofke = true;
     var bossTehdit = tehdit && (tehdit.tur === 'dev' || tehdit === window.DEV || tehdit.tur === 'vargor' || tehdit === window.VARGOR || tehdit.devMi);
     if (tehdit && (!P.ofkeli || (bossTehdit && P.can < 45)) && S.atilBekle <= 0 && o.atilT <= 0 && !(mer && P.baltaVar)) {
       var ta = Math.atan2(P.y - tehdit.y, P.x - tehdit.x) + (o.t % 2 < 1 ? 0.9 : -0.9);
@@ -390,7 +392,7 @@
       if (dizi >= 2 || (enD < 110 && bt.t > 0.45) || (bt.faz === 'bekle' && bt.t > 0.2)) g.balta = true;
     }
     // KESME: ok geren okçuya / büyü yapan şamana / çömlek atan yakıcıya balta at
-    if (!mer && !g.balta && P.baltaVar && o.baltaT <= 0 && (P.durum === 'serbest' || P.durum === 'at')) {
+    if (P.yetenekAcik('balta') && !mer && !g.balta && P.baltaVar && o.baltaT <= 0 && (P.durum === 'serbest' || P.durum === 'at')) {
       var kh = null, khD = 1e9;
       for (var ki = 0; ki < liste.length; ki++) {
         var kd = liste[ki], kdm = Math.hypot(kd.x - P.x, kd.y - P.y), kalan;
@@ -494,7 +496,7 @@
     if (!mer) { g.nx = en.x; g.ny = en.y - AYAR.nisanYuksek; }
     var menzil = (P.ofkeli ? AYAR.ofkeMenzil : AYAR.zincir[0].menzil) + (en.r || 20);
     // infazci varken baltayla zırh kırmaya / hasar vermeye öncelik ver
-    if (!mer && !g.balta && P.baltaVar && o.baltaT <= 0 && infazciHedef && infazciD > 115 && infazciD <= AYAR.baltaMenzil && (P.durum === 'serbest' || P.durum === 'at')) {
+    if (P.yetenekAcik('balta') && !mer && !g.balta && P.baltaVar && o.baltaT <= 0 && infazciHedef && infazciD > 115 && infazciD <= AYAR.baltaMenzil && (P.durum === 'serbest' || P.durum === 'at')) {
       g.balta = true; o.baltaT = 1.5; g.nx = infazciHedef.x; g.ny = infazciHedef.y - AYAR.nisanYuksek;
       return { g: g, totem: null };
     }
@@ -526,7 +528,7 @@
       g.hx = Math.cos(o.t * 1.3) * 0.25; g.hy = Math.sin(o.t * 1.3) * 0.25;  // hafif dolanma
     } else {
       g.hx = dx / l; g.hy = dy / l;
-      if (enD > 260 && P.baltaVar && o.baltaT <= 0 && OYUN.rast(0, 1) < 0.02) { g.balta = true; o.baltaT = 2.5; }
+      if (P.yetenekAcik('balta') && enD > 260 && P.baltaVar && o.baltaT <= 0 && OYUN.rast(0, 1) < 0.02) { g.balta = true; o.baltaT = 2.5; }
       else if (enD > 140 && enD < 300 && o.atilT <= 0 && OYUN.rast(0, 1) < 0.015) { g.atil = true; o.atilT = 3; }
     }
     return { g: g, totem: null };
@@ -790,7 +792,7 @@
     emit('vurus', v);
     S.sonIsabet = 0;
     var oc = ek && isFinite(ek.ofkeCarpan) ? ek.ofkeCarpan : 1;   // balta: hasarıyla orantılı öfke
-    if (!P.ofkeli && !(ek && ek.ofkeHarca)) P.ofke = Math.min(100, P.ofke + AYAR.ofkeIsabet * oc + (son.oldu ? AYAR.ofkeOldur : 0));
+    if (P.yetenekAcik('ofke') && !P.ofkeli && !(ek && ek.ofkeHarca)) P.ofke = Math.min(100, P.ofke + AYAR.ofkeIsabet * oc + (son.oldu ? AYAR.ofkeOldur : 0));
   }
 
   // ---------------------------------------------------------------- savurma
@@ -1011,7 +1013,7 @@
     emit('sektir', olay);
     var kus = olay.kusursuz;
     dondur(kus ? 0.075 : 0.05); sars(kus ? 4.5 : 3, 0.1);
-    if (!P.ofkeli) P.ofke = Math.min(100, P.ofke + AYAR.ofkeIsabet + (kus ? AYAR.sektirKusursuzOfke : 0));
+    if (P.yetenekAcik('ofke') && !P.ofkeli) P.ofke = Math.min(100, P.ofke + AYAR.ofkeIsabet + (kus ? AYAR.sektirKusursuzOfke : 0));
   }
 
   // ---------------------------------------------------------------- atılma
@@ -1070,7 +1072,7 @@
     if (!isFinite(miktar) || miktar < 0) miktar = 0;
     var once = P.can;
     P.can = Math.max(OLUMSUZ ? 1 : 0, P.can - miktar);
-    if (!P.ofkeli) P.ofke = Math.min(100, P.ofke + miktar * AYAR.ofkeHasarAl);
+    if (P.yetenekAcik('ofke') && !P.ofkeli) P.ofke = Math.min(100, P.ofke + miktar * AYAR.ofkeHasarAl);
     P.dokunulmazSure = AYAR.dokunulmaz;
     var guc = (o.guc !== undefined && isFinite(o.guc)) ? o.guc : AYAR.itilme;
     var donusSuruyor = P.durum === 'kasirga' && P.kasirgaFaz >= 0 && guc < AYAR.kasirga.kesilmeGucu;
@@ -1100,7 +1102,7 @@
     if (!isFinite(miktar) || miktar <= 0) return false;
     var once = P.can;
     P.can = Math.max(OLUMSUZ ? 1 : 0, P.can - miktar);
-    if (!P.ofkeli) P.ofke = Math.min(100, P.ofke + miktar * AYAR.ofkeHasarAl);
+    if (P.yetenekAcik('ofke') && !P.ofkeli) P.ofke = Math.min(100, P.ofke + miktar * AYAR.ofkeHasarAl);
     emit('oyuncuHasar', { miktar: miktar, canKaybi: once - P.can, x: P.x, y: P.y, aci: 0, yanma: true, kaynak: o && o.kaynak });
     if (P.can <= 0) { olum(); return true; }
     S.parlaT = Math.max(S.parlaT || 0, 0.05);
@@ -1139,7 +1141,7 @@
   }
   // Başlangıç yönü sprite'ın sekiz yönden seçtiği yönle aynı tutulur.
   function kasirgaBasla(nisan) {
-    if (OYUN.bolum < 2 || P.durum !== 'serbest' || !P.baltaVar || P.ofkeli || P.ofke <= 0) return false;
+    if (!P.yetenekAcik('kasirga') || P.durum !== 'serbest' || !P.baltaVar || P.ofkeli || P.ofke <= 0) return false;
     if (!P.sprite || !P.sprite.animVar || !P.sprite.animVar('kasirga_don')) return false;
     S.sonIsabet = 0; S.tSavur = 0; S.tAgir = 0; S.tBalta = 0; S.zNo = 0; S.zPencere = 0;
     yonGuncelle(nisan);
@@ -1263,6 +1265,9 @@
     if (!P.sprite) spriteKur();
     if (!P.canli) { spriteYerlestir(dt); return; }
     var g = girdiOku(dt);
+    // Klavye, fare, gamepad ve otomatik kontrol aynı bölüm kilitlerini kullanır.
+    if (!P.yetenekAcik('balta')) g.balta = false;
+    if (!P.yetenekAcik('agir')) g.agirBas = false;
     var nisan = Math.atan2(g.ny - (P.y - AYAR.nisanYuksek), g.nx - P.x);
 
     // tampon (balta elde değilken basılan tık daha uzun saklanır: balta ele gelince hemen vuruş olur)
@@ -1292,7 +1297,7 @@
     P.dokunulmazSure = Math.max(0, P.dokunulmazSure - dt);
     if (S.zPencere > 0) { S.zPencere -= dt; if (S.zPencere <= 0) S.zNo = 0; }
 
-    ofkeGuncelle(dt, g);
+    if (P.yetenekAcik('ofke')) ofkeGuncelle(dt, g);
     if (g.kasirgaTut && P.durum === 'serbest') kasirgaBasla(nisan);
     tutusGuncelle(dt);
 
@@ -1518,7 +1523,7 @@
       P.y -= 56;
     }
     S.ox = P.x; S.oy = P.y; S.gv = 0; S.vR = 0;
-    P.can = P.canMax = AYAR.canMax; P.ofke = 0; P.ofkeli = false; P.baltaVar = true; P.canli = true;
+    P.can = P.canMax = AYAR.canMax; P.ofke = P.yetenekAcik('ofke') ? 24 : 0; P.ofkeli = false; P.baltaVar = true; P.canli = true;
     P.kasirgaFaz = -1; P.kasirgaAci = 0;
     P.durum = 'serbest'; P.dokunulmazSure = 0; P.aci = -PI / 2; P.yon = 4; P.tutusT = 0;
     if (P.sprite) { P.sprite.alpha = 1; }
