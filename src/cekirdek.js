@@ -138,15 +138,18 @@
   //   Görünen dünya: x ∈ [kamera.x + x0, kamera.x + x0 + w], y ∈ [kamera.y + y0, kamera.y + y0 + h]. Oynanış yine 1280×720'ye göre.
   var gorunum = OYUN.gorunum = { x0: 0, y0: 0, w: W, h: H };
   var _ox = 0, _oy = 0, _lw = W, _lh = H, _TAVAN = 4;   // _TAVAN: en çok 4 aygıt pikseli / mantıksal birim (dev ekranlarda dolum maliyeti)
-  var GRAFIK_ANAHTAR = "barbar-grafik-v1";
-  var grafik = OYUN.grafik = { golge: true, isik: true, atmosfer: true };
+  var GRAFIK_ANAHTAR = "barbar-grafik-v2";
+  var grafik = OYUN.grafik = { golge: 0, isik: 0, atmosfer: 0 };
+  function kaliteMi(deger) { return deger === 0 || deger === 1 || deger === 2; }
   try {
     var kayit = JSON.parse(localStorage.getItem(GRAFIK_ANAHTAR));
-    if (kayit) Object.keys(grafik).forEach(function (ad) { if (kayit[ad] === false) grafik[ad] = false; });
+    if (kayit) Object.keys(grafik).forEach(function (ad) { if (kaliteMi(kayit[ad])) grafik[ad] = kayit[ad]; });
   } catch (e) { /* kayıt isteğe bağlı */ }
-  OYUN.grafikYap = function (ad, acik) {
-    if (!Object.prototype.hasOwnProperty.call(grafik, ad) || typeof acik !== "boolean" || grafik[ad] === acik) return;
-    grafik[ad] = acik;
+  OYUN.grafikYap = function (ad, deger) {
+    if (!kaliteMi(deger)) return;
+    if (ad === "profil") { grafik.golge = grafik.isik = grafik.atmosfer = deger; }
+    else if (Object.prototype.hasOwnProperty.call(grafik, ad)) grafik[ad] = deger;
+    else return;
     try { localStorage.setItem(GRAFIK_ANAHTAR, JSON.stringify(grafik)); } catch (e) { /* kayıt isteğe bağlı */ }
   };
   var CIZIM_ANAHTAR = "barbar-cizim-olcegi";

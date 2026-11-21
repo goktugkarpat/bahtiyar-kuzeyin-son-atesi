@@ -1950,8 +1950,8 @@
     }
     if (!yagmur) yagmurKur();
     yagmur.perde.visible = yagmur.zemin.visible = true;
-    yagmur.yansima.visible = OYUN.grafik.isik;
-    var hafif = !OYUN.grafik.atmosfer;
+    yagmur.yansima.visible = true;
+    var havaKalitesi = OYUN.grafik.atmosfer;
     var dt = Math.min(gd, .055);
     if (OYUN.durum === 'mola') dt = 0;
     var kutu = gor(), gorunen = gorD();
@@ -1962,27 +1962,26 @@
     var i, d;
     for (i = 0; i < yagmur.damlalar.length; i++) {
       d = yagmur.damlalar[i];
-      if (hafif && i % 2) { d.s.alpha = 0; continue; }
       var hiz = 1.04 + d.derinlik * 1.52;
       d.x = (d.x + ruzgar * hiz * dt) % 1;
       d.y = (d.y + hiz * dt) % 1;
       d.s.position.set(kutu.x0 - 32 + d.x * (kutu.w + 64), kutu.y0 - 34 + d.y * (kutu.h + 68));
       d.s.rotation = egim;
-      d.s.alpha = isik * (.23 + d.derinlik * .43);
+      var kenar = Math.abs(d.x - .5) * 2;
+      d.s.alpha = isik * (.23 + d.derinlik * .43) * (1 + havaKalitesi * .16 * kenar);
     }
     for (i = 0; i < yagmur.halkalar.length; i++) {
       d = yagmur.halkalar[i];
-      if (hafif && i % 2) { d.s.alpha = 0; continue; }
       d.yas += dt;
       if (d.yas > d.sure && dt > 0) {
         d.yas = 0; d.boy = r(.45, 1); d.sure = r(.28, .56);
         d.s.position.set(r(gorunen.x, gorunen.x + gorunen.w), r(gorunen.y, gorunen.y + gorunen.h));
       }
       var p = Math.min(1, d.yas / d.sure);
-      d.s.alpha = .37 * Math.min(1, p * 7) * (1 - p) * (1 - p);
+      d.s.alpha = (.37 + havaKalitesi * .03) * Math.min(1, p * 7) * (1 - p) * (1 - p);
       d.s.scale.set(d.boy * (.17 + p * .7));
     }
-    if (yagmur.yansima.visible) yagmurYansimalari(gorunen);
+    yagmurYansimalari(gorunen);
   }
   function yagmurYansimalari(V) {
     var isiklar = window.BOLUM && BOLUM.atesler;
@@ -1995,7 +1994,7 @@
       s.visible = true;
       s.position.set(f.agizX ?? f.x, f.y + 6);
       s.scale.set(mesale ? .78 : 1.21, mesale ? 1.05 : .90);
-      s.alpha = (mesale ? .52 : .34) * atesTitresim(i, f.tur) * (.92 + .08 * Math.sin(gT * 3 + i));
+      s.alpha = (mesale ? .52 : .34) * (1 + .14 * OYUN.grafik.isik) * atesTitresim(i, f.tur) * (.92 + .08 * Math.sin(gT * 3 + i));
     }
     for (; n < yansimalar.length; n++) yansimalar[n].visible = false;
   }
@@ -2022,7 +2021,7 @@
       s.x = kx + ex; s.y = ky + ey;
       s.tint = kizil ? (i % 2 ? 0xb44e44 : 0x783739) : (i % 2 ? 0x8a94a6 : 0x6e7480);
       s.scale.set(s._b * (kizil ? 1.5 : 1), s._b * (kizil ? .58 : 1));
-      s.alpha = (kizil ? .17 : AYAR.sis) * (.72 + .28 * Math.sin(gT * .3 + i)) * (OYUN.grafik.atmosfer ? 1 : .45);
+      s.alpha = (kizil ? .17 : AYAR.sis) * (.72 + .28 * Math.sin(gT * .3 + i));
     }
   }
   // taze kan üstünde zamanla kararan parlak ıslaklık (damga dokuya yazıldıktan sonra)
@@ -2136,7 +2135,6 @@
     H.renk[i] = renk; H.sp[i].tint = renk; H.sp[i].texture = D.damla;
   }
   function kulGuncelle(H, i, dt, s) {
-    if (H.ek[i] === 0 && !OYUN.grafik.atmosfer && i % 2) { s.alpha = 0; return; }
     H.sayac[i] += dt;
     if (H.ek[i] === 1) {          // tek seferlik (şifa)
       if (H.om[i] <= 0) { H.birak(i); return; }
@@ -2202,7 +2200,7 @@
           atesSayac[j] = Math.min(0.6, (atesSayac[j] || 0) + dt);
           var yayX = (tr === 'enkaz' || tr === 'koz') ? 20 : 9;
           var korYogun = bolumNo === 2;
-          var aralik = (korYogun ? .118 : .16) / g;
+          var aralik = (korYogun ? .118 : .16) / (g * (1 + .14 * OYUN.grafik.atmosfer));
           while (atesSayac[j] > aralik) {
             atesSayac[j] -= aralik;
             var cx = agizX + r(-yayX, yayX) * g, cy = f.y + r(-4, 4);

@@ -7,7 +7,7 @@
   var HAVUZ = 128, golgeler = [], doku = null, temasDoku = null, kap = null, temas = null;
   var DEKOR_HAVUZ = 48, dekorGolge = [], dekorKap = null;
   var dekorIzleri = [], canliIzleri = [];
-  var ISIK_HAVUZ = 24, bounceIsik = [], bounceKap = null, isikDoku = null;
+  var ISIK_HAVUZ = 24, bounceIsik = [], isikYapraklari = [], bounceKap = null, isikDoku = null;
   var kuleZeminIsigi, ayazYansimalari = [];
   var devOrtamGolge = null, vargorOrtamGolge = null, devOrtamDoku = null;
   var zaman = 0, vargorAlfa = 1;
@@ -18,10 +18,16 @@
     { x: -0.36, y: -0.20, renk: 0x33201e, dekor: 0.40, canli: 0.38 },
     { x: 0.35, y: 0.22, renk: 0x26394b, dekor: 0.30, canli: 0.32 }
   ];
-  GOLGE_YON.forEach(function (yon) {
+  var GOLGE_PROFILLERI = [GOLGE_YON, 1.12, 1.27].map(function (seviye) {
+    if (seviye === GOLGE_YON) return GOLGE_YON;
+    return GOLGE_YON.map(function (yon) {
+      return { x: yon.x * seviye, y: yon.y * seviye, renk: yon.renk, dekor: yon.dekor * seviye, canli: yon.canli * seviye };
+    });
+  });
+  GOLGE_PROFILLERI.forEach(function (dizi) { dizi.forEach(function (yon) {
     yon.egim = Math.atan2(-yon.x, -yon.y);
     yon.uzunluk = Math.hypot(yon.x, yon.y);
-  });
+  }); });
   var GEN = {
     goblin: 34, okcu: 46, kalkanli: 58, saman: 44, yakici: 46,
     baskinci: 48, infazci: 68, dev: 190, vargor: 145,
@@ -104,7 +110,7 @@
       if (c.x + w + Math.max(0, dx) < V.x || c.x - w + Math.min(0, dx) > x1 ||
           c.y + 42 + Math.max(0, dy) < V.y || c.y - 52 + Math.min(0, dy) > y1) continue;
       // Yıkıntı ve kaya kısa, kule ve ağaç uzun bir iz bırakır. Taban ise gerçek temas ölçülerini izler.
-      if (OYUN.grafik.golge) izduser(dekorIzleri[n], c, c.x, c.y, c.scale.x, c.scale.y, yon, yon.dekor * c.alpha);
+      izduser(dekorIzleri[n], c, c.x, c.y, c.scale.x, c.scale.y, yon, yon.dekor * c.alpha);
       var s = dekorGolge[n++], taban = c.golgeTaban;
       s.position.set(c.x, c.y - Math.min(12, taban[1] * 0.23));
       s.width = Math.max(14, Math.min(w * 1.16, taban[0] * 1.2));
@@ -112,7 +118,7 @@
       s.tint = yon.renk; s.alpha = AYAR.dekorAlfa * c.alpha; s.visible = true;
     }
     kalanIzleriGizle(dekorGolge, n);
-    kalanIzleriGizle(dekorIzleri, OYUN.grafik.golge ? n : 0);
+    kalanIzleriGizle(dekorIzleri, n);
   }
 
   // Altı yumuşakça zemine karışan tek temas dokusu. Bölüme göre gölge rengini sprite verir.
@@ -174,7 +180,9 @@
     for (var b = 0; b < ISIK_HAVUZ; b++) {
       var bs = new PIXI.Sprite(isikDoku);
       bs.anchor.set(0.5); bs.visible = false; bs.blendMode = addMode;
-      bounceKap.addChild(bs); bounceIsik.push(bs);
+      var yakinti = new PIXI.Sprite(isikDoku);
+      yakinti.anchor.set(0.5); yakinti.visible = false; yakinti.blendMode = addMode;
+      bounceKap.addChild(bs, yakinti); bounceIsik.push(bs); isikYapraklari.push(yakinti);
     }
     var lamba = document.createElement('canvas'); lamba.width = lamba.height = 128;
     var fg = lamba.getContext('2d'), sicak = fg.createRadialGradient(64, 64, 2, 64, 64, 63);
@@ -210,19 +218,20 @@
   }
   function mesaleSekmeleri() {
     var at = window.BOLUM && BOLUM.atesler;
-    if (!OYUN.grafik.isik || !at || !at.length || AYAR.mesaleSekme <= 0) {
-      for (var k = 0; k < ISIK_HAVUZ; k++) bounceIsik[k].visible = false;
+    if (!at || !at.length || AYAR.mesaleSekme <= 0) {
+      for (var k = 0; k < ISIK_HAVUZ; k++) bounceIsik[k].visible = isikYapraklari[k].visible = false;
       return;
     }
     var V = gorD(), ky = V.y, Hh = V.h, n = 0;   // görünen dünya (yakınlık + görüş kayması; tam ekran şeritleri dahil)
     var ayaz = OYUN.bolum === 3, volkan = OYUN.bolum === 2;
+    var kalite = OYUN.grafik.isik;
     // Aynı ışık havuzu: köyde ıslak taş genişçe yansıtır, ocakta ışık zemine daha yakın kalır.
     var en = ayaz ? 1 : volkan ? 1.98 : 2.20, boy = ayaz ? .46 : volkan ? .98 : .87;
     var guc = ayaz ? 1 : volkan ? 3.50 : 4.20, tavan = ayaz ? .22 : volkan ? .44 : .53;
     for (var i = 0; i < at.length && n < ISIK_HAVUZ; i++) {
       var f = at[i];
       if (!f || f.y < ky - 220 || f.y > ky + Hh + 220 || f.x < V.x - 260 || f.x > V.x + V.w + 260) continue;
-      var s = bounceIsik[n++];
+      var s = bounceIsik[n], yakin = isikYapraklari[n++];
       var tit = 1 + Math.sin(zaman * 5.3 + i * 1.7) * 0.08 + Math.sin(zaman * 11.1 + i * 3.1) * 0.04;
       var g = (f.guc || 1) * tit;
       var cap = (150 + (f.h || 30) * 1.8) * Math.sqrt(Math.max(0.4, f.guc || 1));
@@ -232,9 +241,17 @@
       s.width = cap * en * tit;
       s.height = cap * boy * tit;
       s.tint = ayaz ? (f.tur === 'mesale' ? 0xff9442 : 0xff7629) : (volkan ? 0xffad78 : 0xffdfb1);
-      s.alpha = Math.min(tavan, AYAR.mesaleSekme * g * guc);
+      s.alpha = Math.min(tavan * (1 + .11 * kalite), AYAR.mesaleSekme * g * guc * (1 + .13 * kalite));
+      yakin.visible = kalite > 0;
+      if (yakin.visible) {
+        yakin.position.set(s.x, s.y - (f.tur === "mesale" ? 12 : 5));
+        yakin.width = s.width * (kalite === 2 ? .54 : .38);
+        yakin.height = s.height * .42;
+        yakin.tint = 0xffd2a0;
+        yakin.alpha = Math.min(.36, (kalite === 2 ? .19 : .105) * g);
+      }
     }
-    for (; n < ISIK_HAVUZ; n++) bounceIsik[n].visible = false;
+    for (; n < ISIK_HAVUZ; n++) bounceIsik[n].visible = isikYapraklari[n].visible = false;
   }
   function ayazKarakterIsigi(indeks, actor, lamba) {
     var katman = actor && actor.sprite, taban = katman && katman.g;
@@ -272,7 +289,6 @@
       kuleZeminIsigi.width = 740; kuleZeminIsigi.height = 510;
       kuleZeminIsigi.alpha = .76 * Math.min(1, lamba.guc / 1.55);
     }
-    if (!OYUN.grafik.isik) lamba = null;
     ayazKarakterIsigi(0, window.OYUNCU, lamba);
     ayazKarakterIsigi(1, window.SKARN, lamba);
   }
@@ -283,7 +299,7 @@
     s.tint = yon.renk; s.alpha = alfa; s.visible = true;
   }
   function canliIz(n, spr, x, y, V, yon, alfa) {
-    if (!OYUN.grafik.golge || !spr || !spr.visible || n >= HAVUZ || alfa <= 0 ||
+    if (!spr || !spr.visible || n >= HAVUZ || alfa <= 0 ||
         x < V.x - 180 || x > V.x + V.w + 180 ||
         y < V.y - 130 || y > V.y + V.h + 130) return n;
     var g = spr.g || spr;
@@ -336,11 +352,36 @@
     }
     return { ortu: ortu, alfa: saklananAlfa };
   }
+  var ZEMIN_RENK = [
+    [1.14, .014, 0, 0, 0.002, 0, 1.08, .012, 0, .006, 0, .012, 1.09, 0, .011, 0, 0, 0, 1, 0],
+    [1.18, .022, 0, 0, .007, 0, 1.075, .012, 0, .001, 0, 0, 1.055, 0, .001, 0, 0, 0, 1, 0],
+    [1.085, .012, .008, 0, .003, 0, 1.10, .021, 0, .009, 0, .018, 1.15, 0, .014, 0, 0, 0, 1, 0]
+  ];
+  var tonFiltre = null, tonFiltreler = null, tonBolumu = 0, tonAcik = false;
+  function zeminRenkDuzenle() {
+    // Sadece zemin: leke katmanındaki saldırı işaretleri ve tüm karakterler kapsam dışında.
+    var zemin = OYUN.katman.zemin;
+    if (OYUN.grafik.isik !== 2 || !OYUN.app.renderer.gl || !PIXI.filters || !PIXI.filters.ColorMatrixFilter) {
+      if (tonAcik) { zemin.filters = null; zemin.filterArea = null; tonAcik = false; }
+      return;
+    }
+    if (!tonFiltre) { tonFiltre = new PIXI.filters.ColorMatrixFilter(); tonFiltreler = [tonFiltre]; }
+    if (tonBolumu !== OYUN.bolum) {
+      tonBolumu = OYUN.bolum;
+      tonFiltre.matrix = ZEMIN_RENK[tonBolumu - 1] || ZEMIN_RENK[0];
+    }
+    tonFiltre.resolution = OYUN.app.renderer.resolution;
+    zemin.filterArea = OYUN.app.renderer.screen;
+    if (!tonAcik) { zemin.filters = tonFiltreler; tonAcik = true; }
+  }
+
   function herKare(gd) {
     if (!kap) return;
     var dt = Math.min(0.1, gd || 0.016);
     zaman += dt;
-    var V = gorD(), yon = GOLGE_YON[OYUN.bolum - 1] || GOLGE_YON[0];
+    var V = gorD(), profil = GOLGE_PROFILLERI[OYUN.grafik.golge];
+    var yon = profil[OYUN.bolum - 1] || profil[0];
+    zeminRenkDuzenle();
     try { mesaleSekmeleri(); } catch (e) {}
     ayazArenaIsigi(V);
     dekorGolgeleri(V, yon);

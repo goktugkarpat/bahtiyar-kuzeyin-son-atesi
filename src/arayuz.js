@@ -221,8 +221,9 @@
       grup.setAttribute('role', 'group');
       grup.setAttribute('aria-label', ad);
       $('span', '', grup, ad);
+      var dugmeler = $('div', 'ar-grafik-dugmeler', grup);
       secimler.forEach(function (secim) {
-        var b = dugme(grup, secim[0], function () {
+        var b = dugme(dugmeler, secim[0], function () {
           uygula(secim[1]);
           grafikSecenekleri.forEach(function (guncelle) { guncelle(); });
         }, 'kucuk');
@@ -233,12 +234,17 @@
       });
     }
     satir('Render çözünürlüğü', [['1.00×', 1], ['1.25×', 1.25]], OYUN.cizimOlcegi, OYUN.cizimOlcegiYap);
+    var seviyeler = [['Temel', 0], ['Yüksek', 1], ['Çok Yüksek', 2]];
+    satir('Grafik profili', seviyeler, function () {
+      var g = OYUN.grafik;
+      return g.golge === g.isik && g.isik === g.atmosfer ? g.golge : null;
+    }, function (deger) { OYUN.grafikYap('profil', deger); });
     [
-      ['golge', 'Gölge detayı', 'Temas', 'Yönlü'],
-      ['isik', 'Işıklandırma', 'Sade', 'Ayrıntılı'],
-      ['atmosfer', 'Atmosfer yoğunluğu', 'Hafif', 'Normal']
+      ['golge', 'Gölge detayı'],
+      ['isik', 'Işıklandırma'],
+      ['atmosfer', 'Atmosfer yoğunluğu']
     ].forEach(function (a) {
-      satir(a[1], [[a[2], false], [a[3], true]], function () { return OYUN.grafik[a[0]]; },
+      satir(a[1], seviyeler, function () { return OYUN.grafik[a[0]]; },
         function (deger) { OYUN.grafikYap(a[0], deger); });
     });
     return p;
