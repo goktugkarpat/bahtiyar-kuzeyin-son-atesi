@@ -215,37 +215,19 @@
   var grafikSecenekleri = [];
   function grafikPaneli(ebeveyn) {
     var p = $('div', 'ar-panel ar-acilir ar-grafik gizli', ebeveyn);
-    $('h3', '', p, 'GRAFİK');
-    function satir(ad, secimler, oku, uygula) {
-      var grup = $('div', 'ar-grafik-olcek', p);
-      grup.setAttribute('role', 'group');
-      grup.setAttribute('aria-label', ad);
-      $('span', '', grup, ad);
-      var dugmeler = $('div', 'ar-grafik-dugmeler', grup);
-      secimler.forEach(function (secim) {
-        var b = dugme(dugmeler, secim[0], function () {
-          uygula(secim[1]);
-          grafikSecenekleri.forEach(function (guncelle) { guncelle(); });
-        }, 'kucuk');
-        function guncelle() {
-          b.setAttribute('aria-pressed', String(oku() === secim[1]));
-        }
-        guncelle(); grafikSecenekleri.push(guncelle);
-      });
-    }
-    satir('Render çözünürlüğü', [['1.00×', 1], ['1.25×', 1.25]], OYUN.cizimOlcegi, OYUN.cizimOlcegiYap);
-    var seviyeler = [['Temel', 0], ['Yüksek', 1], ['Çok Yüksek', 2]];
-    satir('Grafik profili', seviyeler, function () {
-      var g = OYUN.grafik;
-      return g.golge === g.isik && g.isik === g.atmosfer ? g.golge : null;
-    }, function (deger) { OYUN.grafikYap('profil', deger); });
-    [
-      ['golge', 'Gölge detayı'],
-      ['isik', 'Işıklandırma'],
-      ['atmosfer', 'Atmosfer yoğunluğu']
-    ].forEach(function (a) {
-      satir(a[1], seviyeler, function () { return OYUN.grafik[a[0]]; },
-        function (deger) { OYUN.grafikYap(a[0], deger); });
+    var baslik = $('h3', '', p, 'GRAFİK');
+    var dugmeler = $('div', 'ar-grafik-dugmeler', p);
+    dugmeler.setAttribute('role', 'group');
+    dugmeler.setAttribute('aria-label', baslik.textContent);
+    [['Temel', 1], ['Gelişmiş', 2]].forEach(function (secim) {
+      var b = dugme(dugmeler, secim[0], function () {
+        OYUN.grafikYap(secim[1]);
+        grafikSecenekleri.forEach(function (guncelle) { guncelle(); });
+      }, 'kucuk');
+      function guncelle() {
+        b.setAttribute('aria-pressed', String(OYUN.grafik.isik === secim[1]));
+      }
+      guncelle(); grafikSecenekleri.push(guncelle);
     });
     return p;
   }

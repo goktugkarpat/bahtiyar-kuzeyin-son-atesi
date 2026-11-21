@@ -138,40 +138,22 @@
   //   Görünen dünya: x ∈ [kamera.x + x0, kamera.x + x0 + w], y ∈ [kamera.y + y0, kamera.y + y0 + h]. Oynanış yine 1280×720'ye göre.
   var gorunum = OYUN.gorunum = { x0: 0, y0: 0, w: W, h: H };
   var _ox = 0, _oy = 0, _lw = W, _lh = H, _TAVAN = 4;   // _TAVAN: en çok 4 aygıt pikseli / mantıksal birim (dev ekranlarda dolum maliyeti)
-  var GRAFIK_ANAHTAR = "barbar-grafik-v3";
-  var grafik = OYUN.grafik = { golge: 0, isik: 0, atmosfer: 0 };
-  function kaliteMi(deger) { return deger === 0 || deger === 1 || deger === 2; }
+  var GRAFIK_ANAHTAR = "barbar-grafik-v4";
+  var seviye = 1;
   try {
-    var kayit = JSON.parse(localStorage.getItem(GRAFIK_ANAHTAR));
-    if (!kayit) {
-      var onceki = JSON.parse(localStorage.getItem("barbar-grafik-v2"));
-      if (onceki) {
-        kayit = {};
-        Object.keys(grafik).forEach(function (ad) {
-          if (kaliteMi(onceki[ad])) kayit[ad] = Math.min(onceki[ad], 1);
-        });
-        localStorage.setItem(GRAFIK_ANAHTAR, JSON.stringify(kayit));
-      }
+    var kayit = localStorage.getItem(GRAFIK_ANAHTAR);
+    if (kayit === "2") seviye = 2;
+    else if (kayit === null) {
+      var onceki = JSON.parse(localStorage.getItem("barbar-grafik-v3"));
+      // Ayrı ayarlardan birinde üst düzeyi seçmiş oyuncuların Gelişmiş görünüme erişimi korunur.
+      if (onceki && [onceki.golge, onceki.isik, onceki.atmosfer].includes(2)) seviye = 2;
     }
-    if (kayit) Object.keys(grafik).forEach(function (ad) { if (kaliteMi(kayit[ad])) grafik[ad] = kayit[ad]; });
   } catch (e) { /* kayıt isteğe bağlı */ }
-  OYUN.grafikYap = function (ad, deger) {
-    if (!kaliteMi(deger)) return;
-    if (ad === "profil") { grafik.golge = grafik.isik = grafik.atmosfer = deger; }
-    else if (Object.prototype.hasOwnProperty.call(grafik, ad)) grafik[ad] = deger;
-    else return;
-    try { localStorage.setItem(GRAFIK_ANAHTAR, JSON.stringify(grafik)); } catch (e) { /* kayıt isteğe bağlı */ }
-  };
-  var CIZIM_ANAHTAR = "barbar-cizim-olcegi";
-  var cizimOlcegi = 1;
-  try { if (localStorage.getItem(CIZIM_ANAHTAR) === "1.25") cizimOlcegi = 1.25; } catch (e) { /* kayıt isteğe bağlı */ }
-  OYUN.cizimOlcegi = function () { return cizimOlcegi; };
-  OYUN.cizimOlcegiYap = function (olcek) {
-    var yeni = olcek === 1.25 ? 1.25 : 1;
-    if (yeni === cizimOlcegi) return;
-    cizimOlcegi = yeni;
-    boyutla();
-    try { localStorage.setItem(CIZIM_ANAHTAR, String(yeni)); } catch (e) { /* kayıt isteğe bağlı */ }
+  var grafik = OYUN.grafik = { golge: seviye, isik: seviye, atmosfer: seviye };
+  OYUN.grafikYap = function (deger) {
+    if (deger !== 1 && deger !== 2) return;
+    grafik.golge = grafik.isik = grafik.atmosfer = deger;
+    try { localStorage.setItem(GRAFIK_ANAHTAR, String(deger)); } catch (e) { /* kayıt isteğe bağlı */ }
   };
   function boyutla() {
     var ww = Math.max(1, window.innerWidth || W), wh = Math.max(1, window.innerHeight || H);
@@ -179,7 +161,7 @@
     var dpr = window.devicePixelRatio;
     if (!(dpr > 0 && isFinite(dpr))) dpr = 1;
     var pw = Math.max(1, Math.round(ww * dpr)), ph = Math.max(1, Math.round(wh * dpr));
-    var res = Math.max(0.25, Math.min(pw / W, ph / H)), f = Math.min(cizimOlcegi, _TAVAN / res);
+    var res = Math.max(0.25, Math.min(pw / W, ph / H)), f = Math.min(1, _TAVAN / res);
     var rpw = Math.max(1, Math.round(pw * f)), rph = Math.max(1, Math.round(ph * f));
     res *= f;
     _lw = rpw / res; _lh = rph / res;
