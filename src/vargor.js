@@ -29,7 +29,6 @@
     gurzYariAci: 1.05,
     gurzHasar: 23,
     gurzTele: 0.72,
-    gurzKilit: 0.24,
     gurzToparla: 0.45,
     gurzBekleme: 2.35,
 
@@ -38,7 +37,6 @@
     yarmaYariGen: 52,
     yarmaHasar: 17,
     yarmaTele: 0.9,
-    yarmaKilit: 0.49,
     yarmaToparla: 0.75,
     yarmaBekleme: 5.2,
 
@@ -1409,6 +1407,7 @@
     st.vurdu = false;
     st.kukreTotemAdet = 0;
     st.kukreTakviye = null;
+    // Uyarı çizildikten sonra vuruşun yönü değişmez.
     st.hedefAci = yonAci;
 
     if (norm === 'vur') {
@@ -1683,8 +1682,6 @@
       }
     } else if (st.durum === 'tele') {
       st.sayac += dt;
-      var kilitPayi = st.saldiri === 'vur' ? AYAR.gurzKilit : st.saldiri === 'yarma' ? AYAR.yarmaKilit : null;
-      if (kilitPayi !== null && st.teleSure - st.sayac > kilitPayi) st.hedefAci = Math.atan2(dy, dx);
       if (st.sonAnim) kuklaOynat(st.sonAnim, false);
 
       if (st.sayac >= st.teleSure && !st.vurdu) {

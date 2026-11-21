@@ -104,7 +104,7 @@
       if (c.x + w + Math.max(0, dx) < V.x || c.x - w + Math.min(0, dx) > x1 ||
           c.y + 42 + Math.max(0, dy) < V.y || c.y - 52 + Math.min(0, dy) > y1) continue;
       // Yıkıntı ve kaya kısa, kule ve ağaç uzun bir iz bırakır. Taban ise gerçek temas ölçülerini izler.
-      izduser(dekorIzleri[n], c, c.x, c.y, c.scale.x, c.scale.y, yon, yon.dekor * c.alpha);
+      if (OYUN.grafik.golge) izduser(dekorIzleri[n], c, c.x, c.y, c.scale.x, c.scale.y, yon, yon.dekor * c.alpha);
       var s = dekorGolge[n++], taban = c.golgeTaban;
       s.position.set(c.x, c.y - Math.min(12, taban[1] * 0.23));
       s.width = Math.max(14, Math.min(w * 1.16, taban[0] * 1.2));
@@ -112,7 +112,7 @@
       s.tint = yon.renk; s.alpha = AYAR.dekorAlfa * c.alpha; s.visible = true;
     }
     kalanIzleriGizle(dekorGolge, n);
-    kalanIzleriGizle(dekorIzleri, n);
+    kalanIzleriGizle(dekorIzleri, OYUN.grafik.golge ? n : 0);
   }
 
   // Altı yumuşakça zemine karışan tek temas dokusu. Bölüme göre gölge rengini sprite verir.
@@ -210,7 +210,7 @@
   }
   function mesaleSekmeleri() {
     var at = window.BOLUM && BOLUM.atesler;
-    if (!at || !at.length || AYAR.mesaleSekme <= 0) {
+    if (!OYUN.grafik.isik || !at || !at.length || AYAR.mesaleSekme <= 0) {
       for (var k = 0; k < ISIK_HAVUZ; k++) bounceIsik[k].visible = false;
       return;
     }
@@ -272,6 +272,7 @@
       kuleZeminIsigi.width = 740; kuleZeminIsigi.height = 510;
       kuleZeminIsigi.alpha = .76 * Math.min(1, lamba.guc / 1.55);
     }
+    if (!OYUN.grafik.isik) lamba = null;
     ayazKarakterIsigi(0, window.OYUNCU, lamba);
     ayazKarakterIsigi(1, window.SKARN, lamba);
   }
@@ -282,7 +283,7 @@
     s.tint = yon.renk; s.alpha = alfa; s.visible = true;
   }
   function canliIz(n, spr, x, y, V, yon, alfa) {
-    if (!spr || !spr.visible || n >= HAVUZ || alfa <= 0 ||
+    if (!OYUN.grafik.golge || !spr || !spr.visible || n >= HAVUZ || alfa <= 0 ||
         x < V.x - 180 || x > V.x + V.w + 180 ||
         y < V.y - 130 || y > V.y + V.h + 130) return n;
     var g = spr.g || spr;

@@ -44,7 +44,7 @@ Bahtiyar, sağanak altındaki Yanık Köy’de kayıp bir kafilenin izini bulur.
 | Esc | Mola |
 | Shift + F | Çözünürlük ve FPS göstergesini aç veya kapat |
 
-Başlık ve mola ekranındaki **Grafik** menüsünden render çözünürlüğünü **1.00×** ya da **1.25×** seçebilirsin.
+Başlık ve mola ekranındaki **Grafik** menüsünden render çözünürlüğünü **1.00×** ya da **1.25×** seçebilirsin. Aynı menüde gölgeler, çevre ışıkları ve hava efektleri ayrı ayrı ayarlanabilir.
 
 ### Dövüş ve öfke
 

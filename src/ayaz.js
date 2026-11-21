@@ -733,7 +733,7 @@
     }
     karKur(); kar.visible = ruzgarPerdesi.visible = true;
     var v = OYUN.gorunum, t = OYUN.zaman.gercekT;
-    var esinti = Math.pow(.5 + Math.sin(t * .88) * .5, 3);
+    var esinti = Math.pow(.5 + Math.sin(t * .88) * .5, 3), hafif = !OYUN.grafik.atmosfer;
     var sahne = bolge(OYUN.kamera.y + 330);
     var hedef = sahne === 'kusatma_avlusu' ? .63 : sahne === 'isaret_kulesi' ? .53 : 1;
     tipiOran += (hedef - tipiOran) * (1 - Math.exp(-dt * 3.7));
@@ -748,7 +748,7 @@
     for (var n=0;n<ruzgarSeritleri.length;n++) {
       var serit = ruzgarSeritleri[n], u=(t*(.11+n*.018)+n*.328)%1;
       serit.position.set(v.x0+v.w*(u*1.60-.30),v.y0+v.h*(.20+n*.29+u*.05));
-      serit.alpha=Math.sin(u*Math.PI)*tipiOran*(.20+.40*esinti);
+      serit.alpha=Math.sin(u*Math.PI)*tipiOran*(.20+.40*esinti)*(hafif ? .5 : 1);
     }
     var kameraY = OYUN.kamera.y;
     uzakAtes.visible = kameraY > 920;
@@ -762,7 +762,9 @@
       OLAY.emit('ayazBolge', { ad: sahne === 'buz_bogazi' ? 'Donmuş Boğaz' : sahne === 'kusatma_avlusu' ? 'Kuşatma Avlusu' : 'İşaret Kulesi' });
     }
     for (var i = 0; i < karlar.length; i++) {
-      var k = karlar[i], yakin=.27+k.z*.73;
+      var k = karlar[i];
+      if (hafif && i % 2) { k.s.alpha = 0; continue; }
+      var yakin=.27+k.z*.73;
       k.x += ruzgar * (1 + k.z * 1.9) * dt;
       k.y += (.052 + .128 * k.z + .016 * esinti) * dt;
       k.s.scale.set(yakin*(.88+esinti*.53),yakin*(.91+esinti*.08));

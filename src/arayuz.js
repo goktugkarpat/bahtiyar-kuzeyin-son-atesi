@@ -214,21 +214,32 @@
   }
   var grafikSecenekleri = [];
   function grafikPaneli(ebeveyn) {
-    var p = $('div', 'ar-panel ar-acilir gizli', ebeveyn);
+    var p = $('div', 'ar-panel ar-acilir ar-grafik gizli', ebeveyn);
     $('h3', '', p, 'GRAFİK');
-    var secenekler = $('div', 'ar-grafik-olcek', p);
-    secenekler.setAttribute('role', 'group');
-    secenekler.setAttribute('aria-label', 'Render çözünürlüğü');
-    $('span', '', secenekler, 'Render çözünürlüğü');
-    [1, 1.25].forEach(function (olcek) {
-      var b = dugme(secenekler, olcek.toFixed(2) + '×', function () {
-        OYUN.cizimOlcegiYap(olcek);
-        grafikSecenekleri.forEach(function (guncelle) { guncelle(); });
-      }, 'kucuk');
-      function guncelle() {
-        b.setAttribute('aria-pressed', String(OYUN.cizimOlcegi() === olcek));
-      }
-      guncelle(); grafikSecenekleri.push(guncelle);
+    function satir(ad, secimler, oku, uygula) {
+      var grup = $('div', 'ar-grafik-olcek', p);
+      grup.setAttribute('role', 'group');
+      grup.setAttribute('aria-label', ad);
+      $('span', '', grup, ad);
+      secimler.forEach(function (secim) {
+        var b = dugme(grup, secim[0], function () {
+          uygula(secim[1]);
+          grafikSecenekleri.forEach(function (guncelle) { guncelle(); });
+        }, 'kucuk');
+        function guncelle() {
+          b.setAttribute('aria-pressed', String(oku() === secim[1]));
+        }
+        guncelle(); grafikSecenekleri.push(guncelle);
+      });
+    }
+    satir('Render çözünürlüğü', [['1.00×', 1], ['1.25×', 1.25]], OYUN.cizimOlcegi, OYUN.cizimOlcegiYap);
+    [
+      ['golge', 'Gölge detayı', 'Temas', 'Yönlü'],
+      ['isik', 'Işıklandırma', 'Sade', 'Ayrıntılı'],
+      ['atmosfer', 'Atmosfer yoğunluğu', 'Hafif', 'Normal']
+    ].forEach(function (a) {
+      satir(a[1], [[a[2], false], [a[3], true]], function () { return OYUN.grafik[a[0]]; },
+        function (deger) { OYUN.grafikYap(a[0], deger); });
     });
     return p;
   }

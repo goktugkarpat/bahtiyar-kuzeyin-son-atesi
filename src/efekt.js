@@ -1949,7 +1949,9 @@
       return;
     }
     if (!yagmur) yagmurKur();
-    yagmur.perde.visible = yagmur.zemin.visible = yagmur.yansima.visible = true;
+    yagmur.perde.visible = yagmur.zemin.visible = true;
+    yagmur.yansima.visible = OYUN.grafik.isik;
+    var hafif = !OYUN.grafik.atmosfer;
     var dt = Math.min(gd, .055);
     if (OYUN.durum === 'mola') dt = 0;
     var kutu = gor(), gorunen = gorD();
@@ -1960,6 +1962,7 @@
     var i, d;
     for (i = 0; i < yagmur.damlalar.length; i++) {
       d = yagmur.damlalar[i];
+      if (hafif && i % 2) { d.s.alpha = 0; continue; }
       var hiz = 1.04 + d.derinlik * 1.52;
       d.x = (d.x + ruzgar * hiz * dt) % 1;
       d.y = (d.y + hiz * dt) % 1;
@@ -1969,6 +1972,7 @@
     }
     for (i = 0; i < yagmur.halkalar.length; i++) {
       d = yagmur.halkalar[i];
+      if (hafif && i % 2) { d.s.alpha = 0; continue; }
       d.yas += dt;
       if (d.yas > d.sure && dt > 0) {
         d.yas = 0; d.boy = r(.45, 1); d.sure = r(.28, .56);
@@ -1978,7 +1982,7 @@
       d.s.alpha = .37 * Math.min(1, p * 7) * (1 - p) * (1 - p);
       d.s.scale.set(d.boy * (.17 + p * .7));
     }
-    yagmurYansimalari(gorunen);
+    if (yagmur.yansima.visible) yagmurYansimalari(gorunen);
   }
   function yagmurYansimalari(V) {
     var isiklar = window.BOLUM && BOLUM.atesler;
@@ -2018,7 +2022,7 @@
       s.x = kx + ex; s.y = ky + ey;
       s.tint = kizil ? (i % 2 ? 0xb44e44 : 0x783739) : (i % 2 ? 0x8a94a6 : 0x6e7480);
       s.scale.set(s._b * (kizil ? 1.5 : 1), s._b * (kizil ? .58 : 1));
-      s.alpha = (kizil ? .17 : AYAR.sis) * (.72 + .28 * Math.sin(gT * .3 + i));
+      s.alpha = (kizil ? .17 : AYAR.sis) * (.72 + .28 * Math.sin(gT * .3 + i)) * (OYUN.grafik.atmosfer ? 1 : .45);
     }
   }
   // taze kan üstünde zamanla kararan parlak ıslaklık (damga dokuya yazıldıktan sonra)
@@ -2132,6 +2136,7 @@
     H.renk[i] = renk; H.sp[i].tint = renk; H.sp[i].texture = D.damla;
   }
   function kulGuncelle(H, i, dt, s) {
+    if (H.ek[i] === 0 && !OYUN.grafik.atmosfer && i % 2) { s.alpha = 0; return; }
     H.sayac[i] += dt;
     if (H.ek[i] === 1) {          // tek seferlik (şifa)
       if (H.om[i] <= 0) { H.birak(i); return; }
