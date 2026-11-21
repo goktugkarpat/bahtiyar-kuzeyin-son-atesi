@@ -216,19 +216,26 @@
   function grafikPaneli(ebeveyn) {
     var p = $('div', 'ar-panel ar-acilir ar-grafik gizli', ebeveyn);
     var baslik = $('h3', '', p, 'GRAFİK');
-    var dugmeler = $('div', 'ar-grafik-dugmeler', p);
-    dugmeler.setAttribute('role', 'group');
-    dugmeler.setAttribute('aria-label', baslik.textContent);
-    [['Temel', 1], ['Gelişmiş', 2]].forEach(function (secim) {
-      var b = dugme(dugmeler, secim[0], function () {
-        OYUN.grafikYap(secim[1]);
-        grafikSecenekleri.forEach(function (guncelle) { guncelle(); });
-      }, 'kucuk');
-      function guncelle() {
-        b.setAttribute('aria-pressed', String(OYUN.grafik.isik === secim[1]));
-      }
-      guncelle(); grafikSecenekleri.push(guncelle);
-    });
+    function secenekler(grup, ad, secimler, oku, uygula) {
+      grup.setAttribute('role', 'group');
+      grup.setAttribute('aria-label', ad);
+      secimler.forEach(function (secim) {
+        var b = dugme(grup, secim[0], function () {
+          uygula(secim[1]);
+          grafikSecenekleri.forEach(function (guncelle) { guncelle(); });
+        }, 'kucuk');
+        function guncelle() {
+          b.setAttribute('aria-pressed', String(oku() === secim[1]));
+        }
+        guncelle(); grafikSecenekleri.push(guncelle);
+      });
+    }
+    secenekler($('div', 'ar-grafik-dugmeler', p), baslik.textContent,
+      [['Temel', 1], ['Gelişmiş', 2]], function () { return OYUN.grafik.isik; }, OYUN.grafikYap);
+    var olcekSatiri = $('div', 'ar-grafik-olcek', p), olcekAdi = 'Render ölçeği';
+    $('span', '', olcekSatiri, olcekAdi);
+    secenekler($('div', 'ar-grafik-dugmeler ar-grafik-olcek-dugmeleri', olcekSatiri), olcekAdi,
+      [['1.00×', 1], ['1.25×', 1.25], ['1.50×', 1.5]], OYUN.cizimOlcegi, OYUN.cizimOlcegiYap);
     return p;
   }
   function acKapa(panel, digerleri) {

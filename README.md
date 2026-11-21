@@ -44,7 +44,7 @@ Bahtiyar, sağanak altındaki Yanık Köy’de kayıp bir kafilenin izini bulur.
 | Esc | Mola |
 | Shift + F | Çözünürlük ve FPS göstergesini aç veya kapat |
 
-Başlık ve mola ekranındaki **Grafik** menüsünde iki seçenek bulunur. **Temel**, yönlü gölgeler ve her bölüme özgü ışıklandırma ile atmosferi kullanır. **Gelişmiş**, ıslak taşlarda meşale ve Bahtiyar yansımaları, alev parlaması, zeminde hafif alan derinliği, buz parıltısı ve Kül Geçidi’nde yerel ısı dalgalanması ekler. Her iki profil de ekranın piksel yoğunluğuna göre çizilir.
+Başlık ve mola ekranındaki **Grafik** menüsünde iki seçenek bulunur. **Temel**, yönlü gölgeler ve her bölüme özgü ışıklandırma ile atmosferi kullanır. **Gelişmiş**, ıslak taşlarda meşale ve Bahtiyar yansımaları, alev parlaması, zeminde hafif alan derinliği, buz parıltısı ve Kül Geçidi’nde yerel ısı dalgalanması ekler. Render ölçeğini profilden bağımsız olarak **1.00×**, **1.25×** veya **1.50×** seçebilirsin.
 
 ### Dövüş ve öfke
 

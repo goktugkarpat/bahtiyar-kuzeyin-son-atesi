@@ -137,7 +137,7 @@
   //   Ekran (0,0) yine mantıksal alanın sol-üst köşesi; dünya noktası (x,y) ekranda (x - kamera.x, y - kamera.y).
   //   Görünen dünya: x ∈ [kamera.x + x0, kamera.x + x0 + w], y ∈ [kamera.y + y0, kamera.y + y0 + h]. Oynanış yine 1280×720'ye göre.
   var gorunum = OYUN.gorunum = { x0: 0, y0: 0, w: W, h: H };
-  var _ox = 0, _oy = 0, _lw = W, _lh = H, _TAVAN = 4;   // _TAVAN: en çok 4 aygıt pikseli / mantıksal birim (dev ekranlarda dolum maliyeti)
+  var _ox = 0, _oy = 0, _lw = W, _lh = H, _TAVAN = 4.5;   // 4K ekranda 1.50× çizime izin ver, daha büyük ekranlarda dolum maliyetini sınırla.
   var GRAFIK_ANAHTAR = "barbar-grafik-v4";
   var seviye = 1;
   try {
@@ -155,13 +155,27 @@
     grafik.golge = grafik.isik = grafik.atmosfer = deger;
     try { localStorage.setItem(GRAFIK_ANAHTAR, String(deger)); } catch (e) { /* kayıt isteğe bağlı */ }
   };
+  var CIZIM_ANAHTAR = "barbar-cizim-olcegi";
+  var cizimOlcegi = 1;
+  function cizimOlcegiMi(deger) { return deger === 1 || deger === 1.25 || deger === 1.5; }
+  try {
+    var kayitliOlcek = Number(localStorage.getItem(CIZIM_ANAHTAR));
+    if (cizimOlcegiMi(kayitliOlcek)) cizimOlcegi = kayitliOlcek;
+  } catch (e) { /* kayıt isteğe bağlı */ }
+  OYUN.cizimOlcegi = function () { return cizimOlcegi; };
+  OYUN.cizimOlcegiYap = function (olcek) {
+    if (!cizimOlcegiMi(olcek) || olcek === cizimOlcegi) return;
+    cizimOlcegi = olcek;
+    boyutla();
+    try { localStorage.setItem(CIZIM_ANAHTAR, String(olcek)); } catch (e) { /* kayıt isteğe bağlı */ }
+  };
   function boyutla() {
     var ww = Math.max(1, window.innerWidth || W), wh = Math.max(1, window.innerHeight || H);
     // çizim çözünürlüğü = ekrandaki gerçek piksel sayısı (tarayıcı ikinci kez büyütüp bulanıklaştırmasın: "gıcır gıcır")
     var dpr = window.devicePixelRatio;
     if (!(dpr > 0 && isFinite(dpr))) dpr = 1;
     var pw = Math.max(1, Math.round(ww * dpr)), ph = Math.max(1, Math.round(wh * dpr));
-    var res = Math.max(0.25, Math.min(pw / W, ph / H)), f = Math.min(1, _TAVAN / res);
+    var res = Math.max(0.25, Math.min(pw / W, ph / H)), f = Math.min(cizimOlcegi, _TAVAN / res);
     var rpw = Math.max(1, Math.round(pw * f)), rph = Math.max(1, Math.round(ph * f));
     res *= f;
     _lw = rpw / res; _lh = rph / res;
