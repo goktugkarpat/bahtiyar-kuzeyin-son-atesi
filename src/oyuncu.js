@@ -1505,12 +1505,18 @@
     if (window.BOLUM && BOLUM.baslangic) return { x: BOLUM.baslangic.x, y: BOLUM.baslangic.y };
     return { x: (b.sol + b.sag) / 2, y: b.alt - 90 };
   }
+  var baslikBaslangicY = null;
   function sifirla() {
     baltaSil(); iciSifirla(); baltaIstSifirla();
     OTO = varmi('oto'); OLUMSUZ = varmi('olumsuz');
     var og = parseFloat(prm('otoGecikme')); if (isFinite(og) && og >= 0) AYAR.otoGecikme = og > 5 ? og / 1000 : og;   // ms ya da sn
     var y = baslangicYeri();
     P.x = y.x; P.y = y.y; P.vx = P.vy = P.dvx = P.dvy = 0;
+    baslikBaslangicY = null;
+    if (OYUN.durum === 'baslik' && !OYUN.atla && OYUN.bolum === 1) {
+      baslikBaslangicY = y.y;
+      P.y -= 56;
+    }
     S.ox = P.x; S.oy = P.y; S.gv = 0; S.vR = 0;
     P.can = P.canMax = AYAR.canMax; P.ofke = 0; P.ofkeli = false; P.baltaVar = true; P.canli = true;
     P.kasirgaFaz = -1; P.kasirgaAci = 0;
@@ -1520,6 +1526,14 @@
     anim('dur', { bastan: true });
     spriteYerlestir();
   }
+
+  OLAY.on('durum', function (durum) {
+    if (durum === 'baslik' || baslikBaslangicY === null) return;
+    // Başlık ekranındaki kadraj oynanışın başlangıç konumunu değiştirmez.
+    P.y = S.oy = baslikBaslangicY;
+    baslikBaslangicY = null;
+    spriteYerlestir();
+  });
 
   OYUN.sistem('oyuncu', {
     baslat: function () { OTO = varmi('oto'); OLUMSUZ = varmi('olumsuz'); spriteKur(); sifirla(); },
