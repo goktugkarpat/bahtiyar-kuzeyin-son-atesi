@@ -6,7 +6,6 @@
 <title>Bahtiyar</title>
 <link rel="icon" href="data:,">
 <link rel="stylesheet" href="style.css">
-<script src="varlik/besteler.js" defer></script>
 </head>
 <body>
 <div id="sahne"></div>
@@ -17,34 +16,92 @@
     <span class="acilis-durum" role="status">Hazırlanıyor…</span>
   </div>
 </div>
-<script src="vendor/pixi.min.js"></script>
-<script src="src/cekirdek.js"></script>
-<!-- sprite paketleri (her biri VARLIK.ekle çağırır; dosya yoksa yer tutucu çizilir) -->
-<script src="varlik/barbar.js" onerror="void 0"></script>
-<script src="varlik/goblin.js" onerror="void 0"></script>
-<script src="varlik/okcu.js" onerror="void 0"></script>
-<script src="varlik/kalkanli.js" onerror="void 0"></script>
-<script src="varlik/saman.js" onerror="void 0"></script>
-<script src="varlik/yakici.js" onerror="void 0"></script>
-<script src="varlik/dev.js" onerror="void 0"></script>
-<script src="varlik/cevre.js" onerror="void 0"></script>
-<script src="varlik/efekt.js" onerror="void 0"></script>
-<!-- Kül Geçidi paketleri bölüm yükleme ekranında açılır. -->
-<!-- oyun -->
-<script src="src/ses.js"></script>
-<script src="src/efekt.js"></script>
-<script src="src/ayaz.js"></script>
-<script src="src/bolum.js"></script>
-<script src="src/oyuncu.js"></script>
-<script src="src/dusman.js"></script>
-<script src="src/ayaz-animasyon.js"></script>
-<script src="src/ayaz-kurt.js"></script>
-<script src="src/ayaz-dusman.js"></script>
-<script src="src/dev.js"></script>
-<script src="src/vargor.js"></script>
-<script src="src/skarn.js"></script>
-<script src="src/arayuz.js"></script>
-<script src="src/cila.js"></script>
-<script>OYUN.basla();</script>
+<script>
+/* Yükleyici (24 Kasım): oyun dosyaları açılışta ~116 MB. Hepsi paralel indirilir, indirilen MB ve yüzde ekranda gösterilir,
+   sonra SIRAYLA çalıştırılır. İndirilenler "bahtiyar-kuzey-…" önbelleğine kaydedilir (sw.js sonraki açılışlarda oradan verir:
+   tarayıcı kendi önbelleğini silse bile ~2 sn'de açılır, internetsiz de açılır). Dosyadan (file://) açınca eski düzen: sırayla <script>. */
+(function () {
+  var CACHE = 'bahtiyar-kuzey-v1';
+  var LISTE = ['vendor/pixi.min.js', 'src/cekirdek.js',
+    'varlik/barbar.js', 'varlik/goblin.js', 'varlik/okcu.js', 'varlik/kalkanli.js', 'varlik/saman.js', 'varlik/yakici.js',
+    'varlik/dev.js', 'varlik/cevre.js', 'varlik/efekt.js',
+    'src/ses.js', 'src/efekt.js', 'src/ayaz.js', 'src/bolum.js', 'src/oyuncu.js', 'src/dusman.js', 'src/ayaz-animasyon.js',
+    'src/ayaz-kurt.js', 'src/ayaz-dusman.js', 'src/dev.js', 'src/vargor.js', 'src/skarn.js', 'src/arayuz.js', 'src/cila.js'];
+  var SONRA = ['varlik/besteler.js'];        // eskiden "defer": oyun başladıktan sonra çalışır
+  var PAKET = /^varlik\//;                   // eksikse oyun yer tutucu çizer (eski onerror="void 0")
+  var durum = document.querySelector('.acilis-durum');
+  function yaz(t) { if (durum && durum.textContent !== t) durum.textContent = t; }
+  function calistir(ad, metin) {
+    var e = document.createElement('script');
+    e.text = metin + '\n//# sourceURL=' + location.href.replace(/[^\/]*$/, '') + ad;
+    document.body.appendChild(e); document.body.removeChild(e);
+  }
+  function eskiDuzen() {                     // file:// ya da fetch yoksa: sırayla <script src>
+    var hepsi = LISTE.concat(['@basla']).concat(SONRA), i = 0;
+    (function sonraki() {
+      if (i >= hepsi.length) return;
+      var ad = hepsi[i++];
+      if (ad === '@basla') { OYUN.basla(); return sonraki(); }
+      var e = document.createElement('script'); e.src = ad; e.async = false;
+      e.onload = sonraki; e.onerror = function () { if (!PAKET.test(ad)) console.error('yüklenemedi: ' + ad); sonraki(); };
+      document.body.appendChild(e);
+    })();
+  }
+  if (!/^https?:$/.test(location.protocol) || !window.fetch || !window.TextDecoder) { eskiDuzen(); return; }
+  if ('serviceWorker' in navigator) { try { navigator.serviceWorker.register('sw.js').catch(function () {}); } catch (e) {} }
+  var kutu = null;
+  try { if (window.caches) caches.open(CACHE).then(function (c) { kutu = c; }, function () {}); } catch (e) {}
+  var hepsi = LISTE.concat(SONRA), okunan = {}, beklenen = {}, metinler = {}, bitti = {}, sira = 0, basladi = false, t0 = Date.now();
+  function ilerleme() {
+    var o = 0, b = 0, eksik = 0;
+    for (var i = 0; i < hepsi.length; i++) { var a = hepsi[i]; o += okunan[a] || 0; if (beklenen[a]) b += Math.max(beklenen[a], okunan[a] || 0); else eksik++; }
+    if (b > 0 && eksik === 0) {
+      var y = Math.min(99, Math.floor(o / b * 100));
+      yaz('Yükleniyor %' + y + ' · ' + Math.round(o / 1e6) + ' / ' + Math.round(b / 1e6) + ' MB');
+    } else if (Date.now() - t0 > 400) yaz('Yükleniyor… ' + Math.round(o / 1e6) + ' MB');
+  }
+  var iz = setInterval(ilerleme, 200);
+  function ilerlet() {                       // sıradaki dosyalar indiyse sırayla çalıştır
+    while (sira < LISTE.length && bitti[LISTE[sira]]) {
+      var ad = LISTE[sira++], m = metinler[ad]; metinler[ad] = null;
+      if (m !== null && m !== undefined) calistir(ad, m);
+      else if (!PAKET.test(ad)) console.error('yüklenemedi: ' + ad);
+    }
+    if (sira >= LISTE.length && !basladi) {
+      basladi = true; clearInterval(iz); yaz('Hazırlanıyor…');
+      OYUN.basla();
+      var sonra = function () {
+        for (var k = 0; k < SONRA.length; k++) { var a = SONRA[k]; if (!bitti[a]) return; }
+        for (k = 0; k < SONRA.length; k++) { var b = SONRA[k]; if (metinler[b]) calistir(b, metinler[b]); metinler[b] = null; }
+      };
+      sonra(); ilerlet._sonra = sonra;
+    } else if (basladi && ilerlet._sonra) ilerlet._sonra();
+  }
+  function indir(ad) {
+    fetch(ad).then(function (r) {
+      if (!r.ok) throw new Error(r.status);
+      var uz = +r.headers.get('content-length') || 0, sikisik = !!r.headers.get('content-encoding');
+      if (uz) beklenen[ad] = sikisik ? Math.round(uz * 1.32) : uz;   // sıkıştırılmış iniyorsa açılmış boy ≈ ×1,32
+      var etag = r.headers.get('etag') || '', kayitli = !!r.headers.get('x-kaydedildi') || !!(navigator.serviceWorker && navigator.serviceWorker.controller);
+      if (!r.body || !r.body.getReader) return r.text().then(function (t) { okunan[ad] = t.length; return [t, etag, kayitli]; });
+      var oku = r.body.getReader(), coz = new TextDecoder('utf-8'), parca = [];
+      return (function dongu() {
+        return oku.read().then(function (s) {
+          if (s.done) { parca.push(coz.decode()); return [parca.join(''), etag, kayitli]; }
+          okunan[ad] = (okunan[ad] || 0) + s.value.length; parca.push(coz.decode(s.value, { stream: true }));
+          return dongu();
+        });
+      })();
+    }).then(function (x) {
+      metinler[ad] = x[0]; beklenen[ad] = okunan[ad] = Math.max(okunan[ad] || 0, 1);
+      if (kutu && !x[2]) {
+        try { kutu.put(ad, new Response(x[0], { headers: { 'content-type': 'text/javascript; charset=utf-8', 'etag': x[1], 'x-kaydedildi': String(Date.now()) } })).catch(function () {}); } catch (e) {}
+      }
+    }, function () { metinler[ad] = null; beklenen[ad] = okunan[ad] = okunan[ad] || 1; })
+      .then(function () { bitti[ad] = true; ilerlet(); });
+  }
+  for (var i = 0; i < hepsi.length; i++) indir(hepsi[i]);
+})();
+</script>
 </body>
 </html>

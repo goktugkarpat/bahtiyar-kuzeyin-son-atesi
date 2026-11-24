@@ -26,6 +26,7 @@ Kış geçitlerinde kervanlara yol gösteren Bahtiyar, buluşmak için Yanık K�
 
 - **Tarayıcıda** oyunu yukarıdaki bağlantıdan aç. İlk yüklemede görsellerin hazırlanması kısa bir süre alabilir.
 - **Bilgisayarda** oyun klasöründeki `index.html` dosyasını tarayıcıyla aç. Kurulum gerekmez.
+- **İlk açılış:** oyun internetten açılınca bir kez yaklaşık 115 MB indirir; ekranda yüzde ve MB görünür. Sonraki açılışlar birkaç saniye sürer ve oyun internetsiz de açılır.
 - **Sessiz açmak için** adresin sonuna `?sessiz` ekle. Mola ekranından ana ses, efekt ve müzik seviyelerini ayarlayabilirsin.
 
 ## Nasıl oynanır
