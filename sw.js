@@ -23,6 +23,12 @@ function kaydet(c, istek, yanit) {
   var h = new Headers(yanit.headers); h.set('x-kaydedildi', String(Date.now()));
   return yanit.clone().blob().then(function (b) { return c.put(istek, new Response(b, { status: 200, headers: h })); }).catch(function () {});
 }
+// sw.js'in kendisi kaydettiği yanıtları işaretler: sayfadaki yükleyici aynı dosyayı ikinci kez kaydetmesin
+function isaretle(y) {
+  if (!y || !y.ok || y.type === 'opaque') return y;
+  var h = new Headers(y.headers); h.set('x-sw', '1');
+  return new Response(y.body, { status: y.status, statusText: y.statusText, headers: h });
+}
 function anahtar(url) { var u = new URL(url); u.search = ''; u.hash = ''; return u.href; }
 
 self.addEventListener('fetch', function (e) {
@@ -52,7 +58,7 @@ self.addEventListener('fetch', function (e) {
           }
           return eski;
         }
-        return fetch(r).then(function (y) { e.waitUntil(kaydet(c, k, y.clone())); return y; });
+        return fetch(r).then(function (y) { e.waitUntil(kaydet(c, k, y.clone())); return isaretle(y); });
       });
     }));
     return;
@@ -71,7 +77,7 @@ self.addEventListener('fetch', function (e) {
   // kod (src/, style.css): önbellekte varsa hemen ver, arka planda bir kez yenile (güncelleme bir sonraki açılışta)
   e.respondWith(caches.open(CACHE).then(function (c) {
     return c.match(k).then(function (eski) {
-      var yenile = function () { return fetch(r, { cache: 'no-store' }).then(function (y) { return kaydet(c, k, y.clone()).then(function () { return y; }); }); };
+      var yenile = function () { return fetch(r, { cache: 'no-store' }).then(function (y) { return kaydet(c, k, y.clone()).then(function () { return isaretle(y); }); }); };
       if (eski) { if (!denetlendi[k]) { denetlendi[k] = true; e.waitUntil(yenile().catch(function () {})); } return eski; }
       return yenile();
     });
